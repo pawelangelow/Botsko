@@ -14,6 +14,7 @@
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Input;
+    using AI.BotskoPlayer;
 
     public sealed partial class MainPage
     {
@@ -60,7 +61,7 @@
             this.uiPlayer.GameClosed += this.UiPlayerOnGameClosed;
             this.uiPlayer.GameEnded += this.UiPlayerOnGameEnded;
 
-            IPlayer smartPlayer = new SmartPlayer();
+            IPlayer smartPlayer = new BotskoPlayer();
             this.game = new SantaseGame(this.uiPlayer, smartPlayer);
 
             this.PlayerCard.Transparent();

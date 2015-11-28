@@ -11,9 +11,16 @@
 
     public class BotskoPlayerFirstTurnLogic : BotskoPlayerCommonLogic
     {
-        public override Card Execute(PlayerTurnContext context, IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
+
+        public BotskoPlayerFirstTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards) :
+            base(playerActionValidator, cards)
         {
-            return base.Execute(context, playerActionValidator, cards);
+
+        }
+
+        public override Card Execute(PlayerTurnContext context)
+        {
+            return base.Execute(context);
         }
     }
 }
