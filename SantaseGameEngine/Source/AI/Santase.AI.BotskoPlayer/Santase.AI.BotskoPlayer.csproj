@@ -40,6 +40,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BotskoPlayer.cs" />
+    <Compile Include="BotskoPlayerCommonLogic.cs" />
+    <Compile Include="BotskoPlayerFirstTurnLogic.cs" />
+    <Compile Include="BotskoPlayerSecondTurnLogic.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
