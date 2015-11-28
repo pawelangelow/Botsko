@@ -4,12 +4,11 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-
+    using AI.BotskoPlayer;
     using Santase.AI.SmartPlayer;
     using Santase.Logic.Cards;
     using Santase.Logic.GameMechanics;
     using Santase.Logic.Players;
-
     using Windows.System.Profile;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
@@ -60,7 +59,7 @@
             this.uiPlayer.GameClosed += this.UiPlayerOnGameClosed;
             this.uiPlayer.GameEnded += this.UiPlayerOnGameEnded;
 
-            IPlayer smartPlayer = new SmartPlayer();
+            IPlayer smartPlayer = new BotskoPlayer();
             this.game = new SantaseGame(this.uiPlayer, smartPlayer);
 
             this.PlayerCard.Transparent();

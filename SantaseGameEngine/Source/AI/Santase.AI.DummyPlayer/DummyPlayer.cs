@@ -26,18 +26,6 @@
 
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
-            if (context.IsFirstPlayerTurn)
-            {
-                // Az igraq purvi
-                // Tuk ne pipa Ivan, shtoto bolqt zubi.
-            }
-            else
-            {
-                // Az igraq vtori 
-                // Tuk pipa Ivan, shtoto si misli che znae kvo pravi.
-            }
-
-            // Gets the cards in our hand
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
             var shuffledCards = possibleCardsToPlay.Shuffle();
             var cardToPlay = shuffledCards.First();

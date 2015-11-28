@@ -13,10 +13,19 @@
 
     public class BotskoPlayerCommonLogic : IBotskoPlayerCommonLogic
     {
-        // TODO: Remove the dummy logic and make the method abstract, so that the other two cases may override it.
-        public virtual Card Execute(PlayerTurnContext context, IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
+        private IPlayerActionValidator playerActionValidator;
+        private ICollection<Card> cards;
+
+        public BotskoPlayerCommonLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
         {
-            var possibleCardsToPlay = playerActionValidator.GetPossibleCardsToPlay(context, cards);
+            this.playerActionValidator = playerActionValidator;
+            this.cards = cards;
+        }
+
+        // TODO: Remove the dummy logic and make the method abstract, so that the other two cases may override it.
+        public virtual Card Execute(PlayerTurnContext context)
+        {
+            var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             var shuffledCards = possibleCardsToPlay.Shuffle();
             var cardToPlay = shuffledCards.First();
 
