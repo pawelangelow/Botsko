@@ -29,8 +29,7 @@
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
             Card cardToPlay = null;
-
-            if (context.IsFirstPlayerTurn)
+            if (context.FirstPlayedCard == null)
             {
                 cardToPlay = this.FirstTurnLogic.Execute(context);
             }
