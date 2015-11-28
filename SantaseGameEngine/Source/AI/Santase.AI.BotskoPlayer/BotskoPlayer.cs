@@ -35,12 +35,10 @@
 
             if (context.IsFirstPlayerTurn)
             {
-                // Return Card To Play
                 cardToPlay = this.FirstTurnLogic.Execute(context, this.PlayerActionValidator, this.Cards);
             }
             else
             {
-                // Return Card To Play
                 cardToPlay = this.SecondTurnLogic.Execute(context, this.PlayerActionValidator, this.Cards);
             }
 
