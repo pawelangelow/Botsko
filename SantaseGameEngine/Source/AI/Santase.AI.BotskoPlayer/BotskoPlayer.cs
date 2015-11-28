@@ -4,6 +4,7 @@
 
     using Santase.Logic.Extensions;
     using Santase.Logic.Players;
+    using Logic.Cards;
 
     /// <summary>
     /// This dummy player follows the rules and always plays random card.
@@ -24,27 +25,24 @@
 
         public override string Name { get; }
 
+        public BotskoPlayerFirstTurnLogic FirstTurnLogic { get; set; }
+
+        public BotskoPlayerSecondTurnLogic SecondTurnLogic { get; set; }
+
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
+            Card cardToPlay = null;
+
             if (context.IsFirstPlayerTurn)
             {
-                // Az igraq purvi
-                // Tuk ne pipa Ivan, shtoto bolqt zubi.
+                // Return Card To Play
+                cardToPlay = this.FirstTurnLogic.Execute(context, this.PlayerActionValidator, this.Cards);
             }
             else
             {
-                // Az igraq vtori 
-                // Tuk pipa Ivan, shtoto si misli che znae kvo pravi.
+                // Return Card To Play
+                cardToPlay = this.SecondTurnLogic.Execute(context, this.PlayerActionValidator, this.Cards);
             }
-
-            // Gets the cards in our hand
-            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
-            var shuffledCards = possibleCardsToPlay.Shuffle();
-            var cardToPlay = shuffledCards.First();
-
-            // SecondPlayer == Opponent
-            var opponentCardType = context.SecondPlayedCard.Type;
-            var opponentCardSuit = context.SecondPlayedCard.Suit;
 
             return this.PlayCard(cardToPlay);
         }

@@ -43,6 +43,7 @@
     <Compile Include="BotskoPlayerCommonLogic.cs" />
     <Compile Include="BotskoPlayerFirstTurnLogic.cs" />
     <Compile Include="BotskoPlayerSecondTurnLogic.cs" />
+    <Compile Include="Contracts\IBotskoPlayerCommonLogic.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
