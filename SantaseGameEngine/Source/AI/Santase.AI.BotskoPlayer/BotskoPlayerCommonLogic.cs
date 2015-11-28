@@ -13,8 +13,8 @@
 
     public class BotskoPlayerCommonLogic : IBotskoPlayerCommonLogic
     {
-        private IPlayerActionValidator playerActionValidator;
-        private ICollection<Card> cards;
+        protected IPlayerActionValidator playerActionValidator;
+        protected ICollection<Card> cards;
 
         public BotskoPlayerCommonLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
         {
