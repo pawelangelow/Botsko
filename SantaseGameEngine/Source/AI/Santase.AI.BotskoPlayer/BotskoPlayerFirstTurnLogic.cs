@@ -21,33 +21,30 @@
 
             // TODO: Check if CanClose()
 
-            //if (context.State.ShouldObserveRules)
-            //{
-
-            //}
-            //else
-            //{
-            //    var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
-            //    //cardToPlay = this.PlayWhenRulesDoNotApply(context, possibleCardsToPlay);
-            //}
-
-            var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
-            this.FindBiggestTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
-
             return base.Execute(context);
         }
 
         private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             Card cardToPlay = null;
-            
+
             return cardToPlay;
         }
 
         private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             Card cardToPlay = null;
-            
+            var trumpSuit = context.TrumpCard.Suit;
+            var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
+
+            var biggestTrumpInSecondPlayer = this.FindBiggestTrumpCard(possibleCardsToPlay, trumpSuit);
+            //var biggestTrumpInFirstPlayer = this.FindBiggestTrumpCard(opponentCards, trumpSuit);
+
+            //if(biggestTrumpInSecondPlayer.Type > biggestTrumpInSecondPlayer.Type && trumpsCount > 1)
+            //{
+            //    cardToPlay = biggestTrumpInFirstPlayer;
+            //}
+
             return cardToPlay;
         }
 
@@ -55,6 +52,14 @@
 
         private bool CheckIfCanWin(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
+            // Check cards that are passed, my cards (trumps), calculate result
+            var biggestTrumpCard = this.FindBiggestTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+            // var biggestLeftTrump = this.FindBiggestTrumpCard(..., context.TrumpCard.Suit);
+            if (context.SecondPlayerRoundPoints + biggestTrumpCard.GetValue() >= 66)
+            {
+                return true;
+            }
+
             return false;
         }
 
