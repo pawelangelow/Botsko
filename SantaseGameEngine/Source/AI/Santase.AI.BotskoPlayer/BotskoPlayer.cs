@@ -37,11 +37,11 @@
                     this.CloseGame();
                 }
 
-                cardToPlay = this.FirstTurnLogic.Execute(context);
+                cardToPlay = this.FirstTurnLogic.Execute(context, this);
             }
             else
             {
-                cardToPlay = this.SecondTurnLogic.Execute(context);
+                cardToPlay = this.SecondTurnLogic.Execute(context, this);
             }
 
             return this.PlayCard(cardToPlay);

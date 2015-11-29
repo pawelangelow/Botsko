@@ -14,14 +14,14 @@
         {
         }
 
-        public override Card Execute(PlayerTurnContext context)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
         {
             Card cardToPlay = null;
             // TODO: Check if can ChangeTrump()
 
             // TODO: Check if CanClose()
 
-            return base.Execute(context);
+            return base.Execute(context, basePlayer);
         }
 
         //public override void RegisterUsedCard(Card theCard)

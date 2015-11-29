@@ -5,6 +5,6 @@
 
     public interface IBotskoPlayerCommonLogic
     {
-        Card Execute(PlayerTurnContext context);
+        Card Execute(PlayerTurnContext context, BasePlayer basePlayer);
     }
 }
