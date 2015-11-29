@@ -31,6 +31,10 @@
             Card cardToPlay = null;
             if (context.FirstPlayedCard == null)
             {
+                if (this.FirstTurnLogic.IsGoodToClose(context))
+                {
+                    this.CloseGame();
+                }
                 cardToPlay = this.FirstTurnLogic.Execute(context);
             }
             else
@@ -39,6 +43,13 @@
             }
 
             return this.PlayCard(cardToPlay);
+        }
+
+        public override void EndTurn(PlayerTurnContext context)
+        {
+            this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
+            this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
+            base.EndTurn(context);
         }
     }
 }
