@@ -35,6 +35,7 @@
                 {
                     this.CloseGame();
                 }
+
                 cardToPlay = this.FirstTurnLogic.Execute(context);
             }
             else

@@ -15,7 +15,7 @@
     {
         protected IPlayerActionValidator playerActionValidator;
         protected ICollection<Card> cards;
-        private static bool[,] usedCards;
+        protected static bool[,] usedCards;
 
         public BotskoPlayerCommonLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
         {
