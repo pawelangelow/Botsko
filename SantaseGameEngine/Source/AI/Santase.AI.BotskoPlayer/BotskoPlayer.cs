@@ -29,12 +29,14 @@
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
             Card cardToPlay = null;
+
             if (context.FirstPlayedCard == null)
             {
                 if (this.FirstTurnLogic.IsGoodToClose(context))
                 {
                     this.CloseGame();
                 }
+
                 cardToPlay = this.FirstTurnLogic.Execute(context);
             }
             else
