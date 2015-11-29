@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="project.json" />
+    <None Include="project.lock.json" />
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
@@ -44,8 +45,8 @@
     <Compile Include="BotskoPlayerFirstTurnLogic.cs" />
     <Compile Include="BotskoPlayerSecondTurnLogic.cs" />
     <Compile Include="Contracts\IBotskoPlayerCommonLogic.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HandSummary.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Santase.Logic\Santase.Logic.csproj">

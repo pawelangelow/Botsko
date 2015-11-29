@@ -117,7 +117,6 @@
 
                 default:
                     throw new ArgumentException("Unsupported card to play!");
-                    break;
             }
 
             usedCards[firstCoordinate, secondCoordinate] = true;
