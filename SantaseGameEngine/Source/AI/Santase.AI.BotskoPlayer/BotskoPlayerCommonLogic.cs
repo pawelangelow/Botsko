@@ -49,7 +49,37 @@
                 return false;
             }
 
-            var trumps = this.GetTrumpsInHand(this.cards, context.TrumpCard.Suit);
+            var handSummary = this.GetTrumpsInHand(this.cards, context.TrumpCard.Suit);
+
+            if (handSummary.CountOfTrumps > 4)
+            {
+                return true; //// With more than 4 trumps in hand => go get the win
+            }
+
+            if (handSummary.CountOfTrumps == 4 && handSummary.CountOfAcesNoTrumps > 1)
+            {
+                var condition = this.cards
+                    .Where(c => c.Suit == context.TrumpCard.Suit &&
+                            c.Type == CardType.Queen || c.Type == CardType.King)
+                    .Count();
+
+                if (condition > 1)
+                {
+                    return true; ////4 trumps, maybe 40 as announce and at least one ace has good chance to win the game
+                }
+            }
+
+            if (handSummary.CountOfTrumps >= 3 &&
+                handSummary.CountOfAcesNoTrumps > 0 &&
+                (66 - (handSummary.PointsOfAll + handSummary.PointsOfTrumps + context.FirstPlayerRoundPoints)) <= 15)
+            {
+                if (this.IsThereBigCardsInPlay(context.TrumpCard.Suit, 3)) //// Secure the choice even more if big values are gone, it is risky
+                {
+                    return true; //// At least 3 trumps, 1 ace and points close to win
+                }
+            }
+
+            // if(handSummary.CountOfTrumps >= 2 &&)
 
             return false;
         }
@@ -94,27 +124,79 @@
 
         //Help methods
 
-        private TrumpSummary GetTrumpsInHand(ICollection<Card> hand, CardSuit trumpSuit)
+        private HandSummary GetTrumpsInHand(ICollection<Card> hand, CardSuit trumpSuit)
         {
-            int count = 0;
-            int points = 0;
+            //TODO: If it is slow -> break HQC and return array with 3 ingegers
+            int countOfTrumps = 0;
+            int trumpCardPoints = 0;
+            int otherCardPoints = 0;
+            int countOfAcesNoTrumps = 0;
 
             foreach (var card in hand)
             {
                 if (card.Suit == trumpSuit)
                 {
-                    count++;
-                    points += (int)card.Type;
+                    countOfTrumps++;
+                    trumpCardPoints += card.GetValue();
+                }
+                else
+                {
+                    if (card.GetValue() == 11)
+                    {
+                        countOfAcesNoTrumps++;
+                    }
+                    otherCardPoints += card.GetValue();
                 }
             }
 
-            var output = new TrumpSummary
+            var output = new HandSummary
             {
-                Count = count,
-                PointsOfAll = points
+                CountOfTrumps = countOfTrumps,
+                PointsOfAll = otherCardPoints,
+                PointsOfTrumps = trumpCardPoints,
+                CountOfAcesNoTrumps = countOfAcesNoTrumps
             };
 
             return output;
+        }
+
+        private bool IsThereBigCardsInPlay(CardSuit trumpSuit, int howMuch)
+        {
+            int count = 0;
+
+            for (int i = 0; i < 4; i++) //// Anti HQC
+            {
+                for (int j = 4; j < 6; j++) //// Anti HQC
+                {
+                    if (i != (int)trumpSuit &&
+                        usedCards[i, j] == false)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            if (count >= howMuch)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        protected int HowMuchTrumpsAreInPlay(CardSuit trumpSuit)
+        {
+            int count = 0;
+
+            for (int j = 0; j < 6; j++)
+            {
+                if (usedCards[(int)trumpSuit, j] == false)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }
