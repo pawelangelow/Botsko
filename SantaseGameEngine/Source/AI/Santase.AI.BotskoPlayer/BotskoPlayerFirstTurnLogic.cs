@@ -24,10 +24,10 @@
             return base.Execute(context);
         }
 
-        public override void RegisterUsedCard(Card theCard)
-        {
-            base.RegisterUsedCard(theCard);
-        }
+        //public override void RegisterUsedCard(Card theCard)
+        //{
+        //    base.RegisterUsedCard(theCard);
+        //}
 
         private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
