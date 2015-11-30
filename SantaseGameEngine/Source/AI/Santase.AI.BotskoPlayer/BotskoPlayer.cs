@@ -50,6 +50,11 @@
                     this.CloseGame();
                 }
 
+                if (context.State.ShouldObserveRules)
+                {
+                    this.PlayWhenObserveRules(context, announce);
+                }
+
                 cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
             }
             else
@@ -66,7 +71,7 @@
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
 
-            if (context.FirstPlayedCard == myPlayedCard)
+            if (context.FirstPlayedCard == this.myPlayedCard)
             {
                 this.lastOpponentPlayedCard = context.SecondPlayedCard;
             }
@@ -78,13 +83,14 @@
             base.EndTurn(context);
         }
 
-        private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
+        private Card PlayWhenObserveRules(PlayerTurnContext context, Card playerAnnounce)
         {
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
             Card cardToPlay = null;
             var trumpSuit = context.TrumpCard.Suit;
             var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
 
-            var biggestTrumpInHand = this.FirstTurnLogic.FindBiggestTrumpCard(possibleCardsToPlay, trumpSuit);
+            var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
             if (this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
             {
                 if (biggestTrumpInHand.GetValue() >= 10)
@@ -97,8 +103,17 @@
                     return playerAnnounce;
                 }
 
+                var winningAce = this.FirstTurnLogic.HasWinningNotTrumpAce(possibleCardsToPlay, context.TrumpCard.Suit);
+                if (winningAce != null)
+                {
+                    return winningAce;
+                }
 
-                // Check other cases
+                var winningTen = this.FirstTurnLogic.HasWinningNotTrumpTen(context, possibleCardsToPlay, context.TrumpCard.Suit);
+                if (winningTen != null)
+                {
+                    return winningTen;
+                }
             }
 
             return cardToPlay;
