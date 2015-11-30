@@ -30,17 +30,19 @@
             return base.Execute(context, basePlayer, playerAnnounce);
         }
 
-        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, AnnounceInfo playerAnnounce)
+        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
-            if (context.State.CanAnnounce20Or40 && playerAnnounce != AnnounceInfo.DoNotHaveAnnounce)
+            // Check if can call 20 or 40 -> and do it
+            if (context.State.CanAnnounce20Or40 && playerAnnounce != null)
             {
+                return playerAnnounce;
             }
 
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
             return cardToPlay;
         }
 
-        private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
             Card cardToPlay = null;
             var trumpSuit = context.TrumpCard.Suit;
@@ -83,7 +85,7 @@
             return false;
         }
 
-        private bool HasWinningNotTrumpAceOrTenInHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public bool HasWinningNotTrumpAceOrTenInHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var possibleWinners = possibleCardsToPlay
                 .Where(c => (c.Type == CardType.Ace ||
@@ -95,7 +97,7 @@
             return false;
         }
 
-        private Card FindBiggestTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card FindBiggestTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var biggestTrump = possibleCardsToPlay
                 .Where(c => c.Suit == trumpSuit)
@@ -115,7 +117,7 @@
             return smallestNotTrumpCard;
         }
 
-        private bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
+        public bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;
             int biggestTrumpValue = biggestTrump.GetValue();

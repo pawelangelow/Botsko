@@ -6,6 +6,7 @@
     using Logic.Cards;
     using Logic.Players;
     using Santase.Logic.Extensions;
+    using System.Collections.Generic;
 
     // ReSharper disable once UnusedMember.Global
     public class BotskoPlayer : BasePlayer
@@ -61,6 +62,31 @@
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
             base.EndTurn(context);
+        }
+
+        private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
+        {
+            Card cardToPlay = null;
+            var trumpSuit = context.TrumpCard.Suit;
+            var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
+
+            var biggestTrumpInHand = this.FirstTurnLogic.FindBiggestTrumpCard(possibleCardsToPlay, trumpSuit);
+            if (this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
+            {
+                if (biggestTrumpInHand.GetValue() >= 10)
+                {
+                    return biggestTrumpInHand;
+                }
+
+                if (playerAnnounce.Suit == context.TrumpCard.Suit)
+                {
+                    return playerAnnounce;
+                }
+
+                // Check other cases
+            }
+
+            return cardToPlay;
         }
 
         private Card CallAnnounce(PlayerTurnContext context)
