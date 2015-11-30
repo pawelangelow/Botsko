@@ -31,6 +31,7 @@
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
             Card cardToPlay = null;
+            var announce = this.CallAnnounce(context);
 
             if (context.FirstPlayedCard == null)
             {
@@ -45,20 +46,11 @@
                     this.CloseGame();
                 }
 
-                // For now this will be here, but it's better to be in FirstTurnLogic
-                // beacause if it's here, this check can be done only before Execute()
-                // or after it, but not between the logic behind
-                var announceCard = this.CallAnnounce(context);
-                if (announceCard != null)
-                {
-                    return this.PlayCard(announceCard);
-                }
-
-                cardToPlay = this.FirstTurnLogic.Execute(context, this);
+                cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
             }
             else
             {
-                cardToPlay = this.SecondTurnLogic.Execute(context, this);
+                cardToPlay = this.SecondTurnLogic.Execute(context, this, announce);
             }
 
             return this.PlayCard(cardToPlay);
