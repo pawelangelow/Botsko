@@ -52,19 +52,22 @@
 
                 if (context.State.ShouldObserveRules)
                 {
-                    this.PlayWhenObserveRules(context, announce);
+                    cardToPlay = this.PlayWhenObserveRules(context, announce);
                 }
 
                 // Remove if-statement and left only the logic in it.
                 if (!context.State.ShouldObserveRules)
                 {
-                    this.FirstTurnLogic.PlayWhenRulesDoNotApply(
+                    cardToPlay = this.FirstTurnLogic.PlayWhenRulesDoNotApply(
                         context,
                         this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards),
                         announce);
                 }
 
-                cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
+                if (cardToPlay == null)
+                {
+                    cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
+                }
             }
             else
             {
