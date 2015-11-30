@@ -64,6 +64,7 @@
                         announce);
                 }
 
+                // In worst case the logic above do not find card to play
                 if (cardToPlay == null)
                 {
                     cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
