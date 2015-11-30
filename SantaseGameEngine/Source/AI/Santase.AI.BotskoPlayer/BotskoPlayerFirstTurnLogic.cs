@@ -117,6 +117,12 @@
             return smallestNotTrumpCard;
         }
 
+        public bool IsCardWinning(Card possibleWinner, CardSuit trumpSuit)
+        {
+
+            return false;
+        }
+
         public bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;

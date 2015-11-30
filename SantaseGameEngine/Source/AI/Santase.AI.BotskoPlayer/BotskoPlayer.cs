@@ -11,6 +11,9 @@
     // ReSharper disable once UnusedMember.Global
     public class BotskoPlayer : BasePlayer
     {
+        private Card lastOpponentPlayedCard;
+        private Card myPlayedCard;
+
         public BotskoPlayer()
             : this("Botsko Player")
         {
@@ -54,6 +57,7 @@
                 cardToPlay = this.SecondTurnLogic.Execute(context, this, announce);
             }
 
+            this.myPlayedCard = cardToPlay;
             return this.PlayCard(cardToPlay);
         }
 
@@ -61,6 +65,16 @@
         {
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
+
+            if (context.FirstPlayedCard == myPlayedCard)
+            {
+                this.lastOpponentPlayedCard = context.SecondPlayedCard;
+            }
+            else
+            {
+                this.lastOpponentPlayedCard = context.FirstPlayedCard;
+            }
+
             base.EndTurn(context);
         }
 
@@ -82,6 +96,7 @@
                 {
                     return playerAnnounce;
                 }
+
 
                 // Check other cases
             }
