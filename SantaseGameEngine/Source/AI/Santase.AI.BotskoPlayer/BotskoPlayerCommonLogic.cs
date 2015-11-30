@@ -60,10 +60,10 @@
             {
                 var condition = this.cards
                     .Where(c => c.Suit == context.TrumpCard.Suit &&
-                            c.Type == CardType.Queen || c.Type == CardType.King)
+                            (c.Type == CardType.Queen || c.Type == CardType.King))
                     .Count();
 
-                if (condition > 1)
+                if (condition == 2)
                 {
                     return true; ////4 trumps, maybe 40 as announce and at least one ace has good chance to win the game
                 }
@@ -78,8 +78,6 @@
                     return true; //// At least 3 trumps, 1 ace and points close to win
                 }
             }
-
-            // if(handSummary.CountOfTrumps >= 2 &&)
 
             return false;
         }
