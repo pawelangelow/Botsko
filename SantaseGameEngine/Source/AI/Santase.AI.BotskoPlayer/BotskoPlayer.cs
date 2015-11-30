@@ -1,6 +1,8 @@
 ﻿namespace Santase.AI.BotskoPlayer
 {
     using System.Linq;
+
+    using Logic;
     using Logic.Cards;
     using Logic.Players;
     using Santase.Logic.Extensions;
@@ -32,9 +34,24 @@
 
             if (context.FirstPlayedCard == null)
             {
+                // Think about times when is better not to change the trump card despite it is possible
+                if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, this.Cards))
+                {
+                    return this.ChangeTrump(context.TrumpCard);
+                }
+
                 if (this.FirstTurnLogic.IsGoodToClose(context))
                 {
                     this.CloseGame();
+                }
+
+                // For now this will be here, but it's better to be in FirstTurnLogic
+                // beacause if it's here, this check can be done only before Execute()
+                // or after it, but not between the logic behind
+                var announceCard = this.CallAnnounce(context);
+                if (announceCard != null)
+                {
+                    return this.PlayCard(announceCard);
                 }
 
                 cardToPlay = this.FirstTurnLogic.Execute(context, this);
@@ -52,6 +69,35 @@
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
             base.EndTurn(context);
+        }
+
+        private Card CallAnnounce(PlayerTurnContext context)
+        {
+            // First check for 40
+            var possibleCards = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
+            var trumpSuit = context.TrumpCard.Suit;
+            var announceCard = possibleCards
+                .Where(c => c.Type == CardType.Queen &&
+                        this.AnnounceValidator.GetPossibleAnnounce(this.Cards, c, context.TrumpCard) == Announce.Forty)
+                .FirstOrDefault();
+
+            if (announceCard != null)
+            {
+                return announceCard;
+            }
+
+            // Check for 20
+            announceCard = possibleCards
+                .Where(c => c.Type == CardType.Queen &&
+                        this.AnnounceValidator.GetPossibleAnnounce(this.Cards, c, context.TrumpCard) == Announce.Twenty)
+                .FirstOrDefault();
+
+            if (announceCard != null)
+            {
+                return announceCard;
+            }
+
+            return null;
         }
     }
 }
