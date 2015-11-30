@@ -63,7 +63,7 @@
             base.EndTurn(context);
         }
 
-        private AnnounceInfo CallAnnounce(PlayerTurnContext context)
+        private Card CallAnnounce(PlayerTurnContext context)
         {
             // First check for 40
             var possibleCards = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
@@ -75,7 +75,7 @@
 
             if (announceCard != null)
             {
-                return AnnounceInfo.Announce40;
+                return announceCard;
             }
 
             // Check for 20
@@ -86,10 +86,10 @@
 
             if (announceCard != null)
             {
-                return AnnounceInfo.Announce20;
+                return announceCard;
             }
 
-            return AnnounceInfo.DoNotHaveAnnounce;
+            return null;
         }
     }
 }

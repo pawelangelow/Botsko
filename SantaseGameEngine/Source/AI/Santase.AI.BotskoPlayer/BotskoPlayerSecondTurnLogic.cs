@@ -26,7 +26,7 @@
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>Response card.</returns>
-        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, AnnounceInfo playerAnnounce)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
             return base.Execute(context, basePlayer, playerAnnounce);
         }

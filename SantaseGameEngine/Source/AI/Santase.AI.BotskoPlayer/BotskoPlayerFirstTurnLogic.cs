@@ -17,7 +17,7 @@
         {
         }
 
-        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, AnnounceInfo playerAnnounce)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
@@ -30,11 +30,10 @@
             return base.Execute(context, basePlayer, playerAnnounce);
         }
 
-        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, AnnounceInfo playerAnnounce)
         {
-            if (context.State.CanAnnounce20Or40)
+            if (context.State.CanAnnounce20Or40 && playerAnnounce != AnnounceInfo.DoNotHaveAnnounce)
             {
-
             }
 
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
