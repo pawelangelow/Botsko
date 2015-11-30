@@ -30,7 +30,7 @@
             return base.Execute(context, basePlayer, playerAnnounce);
         }
 
-        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
+        public Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
             // Check if can call 20 or 40 -> and do it
             if (context.State.CanAnnounce20Or40 && playerAnnounce != null)
