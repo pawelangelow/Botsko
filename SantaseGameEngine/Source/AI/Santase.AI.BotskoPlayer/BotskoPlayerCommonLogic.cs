@@ -33,7 +33,7 @@
         }
 
         // TODO: Remove the dummy logic and make the method abstract, so that the other two cases may override it.
-        public virtual Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
+        public virtual Card Execute(PlayerTurnContext context, BasePlayer basePlayer, AnnounceInfo playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             var shuffledCards = possibleCardsToPlay.Shuffle();

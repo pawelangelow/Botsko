@@ -17,7 +17,7 @@
         {
         }
 
-        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, AnnounceInfo playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
@@ -27,9 +27,7 @@
 
             Card cardToPlay = null;
 
-            // TODO: Check if can ChangeTrump()
-
-            return base.Execute(context, basePlayer);
+            return base.Execute(context, basePlayer, playerAnnounce);
         }
 
         private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)

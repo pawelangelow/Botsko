@@ -40,6 +40,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnnounceInfo.cs" />
     <Compile Include="BotskoPlayer.cs" />
     <Compile Include="BotskoPlayerCommonLogic.cs" />
     <Compile Include="BotskoPlayerFirstTurnLogic.cs" />
