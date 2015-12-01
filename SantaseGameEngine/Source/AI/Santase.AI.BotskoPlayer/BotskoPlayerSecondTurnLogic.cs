@@ -30,13 +30,21 @@
         /// <returns>Response card.</returns>
         public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
+            Card card = null;
+
             if (context.State.ShouldObserveRules)
             {
+                card = this.TakingHandWinsTheRound(context);
+
+                if (card != null)
+                {
+                    return card;
+                }
             }
             else
             {
                 // Highest priority.
-                var card = this.TakingHandWithAnyOptimalCardWinsTheRound(context);
+                card = this.TakingHandWithAnyOptimalCardWinsTheRound(context);
                 if (card != null)
                 {
                     return card;
@@ -57,9 +65,14 @@
                 }
 
                 card = this.ThrowMinimalCard(context);
+                if (card != null)
+                {
+                    return card;
+                }
             }
 
-            return base.Execute(context, basePlayer, playerAnnounce);
+            return card;
+            //return base.Execute(context, basePlayer, playerAnnounce);
         }
 
         /// <summary>
@@ -372,6 +385,60 @@
             return card;
         }
 
+        private Card TakingHandWinsTheRound(PlayerTurnContext context)
+        {
+            var trumpCardSuit = context.TrumpCard.Suit;
+            var opponentCard = context.FirstPlayedCard;
+            var opponentCardSuit = opponentCard.Suit;
+
+            Card card = null;
+
+            // Taking hand wins the round
+            if (this.CanTakeHand(opponentCard, trumpCardSuit) && this.TakingHandWinsTheRound(context, opponentCard, out card))
+            {
+                if (card != null)
+                {
+                    return card;
+                }
+            }
+
+            // Is worth taking hand
+            else if (this.IsWorthTaking(opponentCard) && this.CanTakeHand(opponentCard, trumpCardSuit))
+            {
+                card = this.GetHighestCard(opponentCardSuit);
+
+                if (card != null)
+                {
+                    return card;
+                }
+                else
+                {
+                    card = this.GetHighestCard(trumpCardSuit);
+
+                    return card;
+                }
+            }
+
+            // Is not worth taking hand or cannot take hand
+            else
+            {
+                card = this.GetLowestCard(opponentCardSuit);
+
+                if (card != null)
+                {
+                    return card;
+                }
+                else
+                {
+                    card = this.GetLowestCard();
+
+                    return card;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Calculates if we can win the round with our current optimal card.
         /// </summary>
@@ -383,7 +450,7 @@
         {
             if (highestCardValue > opponentCardValue)
             {
-                var currentTotalPoints = context.FirstPlayerRoundPoints;
+                var currentTotalPoints = context.SecondPlayerRoundPoints;
                 var currentHandPoints = highestCardValue + opponentCardValue;
 
                 return (currentTotalPoints + currentHandPoints) >= PointsRequiredForWinningRound ? true : false;
@@ -452,9 +519,78 @@
             return opponentCardValue > 4;
         }
 
+        private bool IsWorthTaking(Card opponentCard)
+        {
+            return opponentCard.GetValue() > 4;
+        }
+
         private bool HasCardGreaterThanOpponent(Card opponentCard)
         {
             return this.cards.Any(x => x.Suit == opponentCard.Suit && x.GetValue() > opponentCard.GetValue());
+        }
+
+        private bool CanTakeHand(Card opponentCard, CardSuit trumpCardSuit)
+        {
+            if (this.HasCardsWithSuit(opponentCard.Suit))
+            {
+                var canTake = this.cards.Any(x => x.Suit == opponentCard.Suit && x.GetValue() > opponentCard.GetValue());
+
+                return canTake;
+            }
+            else if (this.HasCardsWithSuit(trumpCardSuit))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool TakingHandWinsTheRound(PlayerTurnContext context, Card opponentCard, out Card myPlayCard)
+        {
+            if (this.HasCardsWithSuit(opponentCard.Suit))
+            {
+                var card = this.cards
+                    .Where(x => x.Suit == opponentCard.Suit && x.GetValue() > opponentCard.GetValue())
+                    .OrderByDescending(x => x.GetValue())
+                    .FirstOrDefault();
+
+                myPlayCard = card;
+
+                if (card.GetValue() > opponentCard.GetValue())
+                {
+                    var takingScore = card.GetValue() + opponentCard.GetValue();
+
+                    if (takingScore + context.SecondPlayerRoundPoints >= PointsRequiredForWinningRound)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            else
+            {
+                var card = this.cards
+                    .Where(x => x.Suit == context.TrumpCard.Suit)
+                    .OrderByDescending(x => x.GetValue())
+                    .FirstOrDefault();
+
+                myPlayCard = card;
+
+                if (myPlayCard.GetValue() > opponentCard.GetValue())
+                {
+                    var takingScore = myPlayCard.GetValue() + opponentCard.GetValue();
+
+                    if (takingScore + context.SecondPlayerRoundPoints >= PointsRequiredForWinningRound)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
     }
 }
