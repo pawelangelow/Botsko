@@ -83,6 +83,11 @@
 
         public virtual void RegisterUsedCard(Card theCard)
         {
+            if(theCard == null)
+            {
+                return;
+            }
+
             int firstCoordinate = (int)theCard.Suit;
             int secondCoordinate = 0;
 
