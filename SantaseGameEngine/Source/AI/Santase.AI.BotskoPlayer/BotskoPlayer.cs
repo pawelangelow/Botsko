@@ -99,22 +99,26 @@
         private Card PlayWhenObserveRules(PlayerTurnContext context, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
-            Card cardToPlay = null;
-            var trumpSuit = context.TrumpCard.Suit;
-            var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
 
+            var trumpSuit = context.TrumpCard.Suit;
+            // var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
             var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
+
             if (biggestTrumpInHand != null &&
                 this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
             {
                 // If have only this one ??
                 if (biggestTrumpInHand.GetValue() >= 10)
                 {
+                    // TODO: Check trumps count in the hand
+
+                    // TODO: Check round points
+
                     return biggestTrumpInHand;
                 }
 
                 if (playerAnnounce != null &&
-                    playerAnnounce.Suit == context.TrumpCard.Suit)
+                    playerAnnounce.Suit == trumpSuit)
                 {
                     return playerAnnounce;
                 }
@@ -132,12 +136,10 @@
                 return winningTen;
             }
 
-            // Find other smaller but winning card
+            // TODO: Find other smaller but winning card
 
             // If do not find any winning card, play the smallest one
-            cardToPlay = this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
-
-            return cardToPlay;
+            return this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
         }
 
         private Card CallAnnounce(PlayerTurnContext context)
