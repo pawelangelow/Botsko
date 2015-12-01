@@ -40,6 +40,12 @@
                 {
                     return card;
                 }
+
+                card = this.ThrowMinimalCard(context);
+                if (card != null)
+                {
+                    return card;
+                }
             }
             else
             {
@@ -400,6 +406,18 @@
                     return card;
                 }
             }
+
+            else if (this.HasCardGreaterThanOpponent(opponentCard))
+            {
+                return this.GetHighestCard(opponentCard.Suit);
+            }
+
+            else if(!this.HasCardsWithSuit(opponentCard.Suit) && opponentCard.Suit != trumpCardSuit && this.HasCardsWithSuit(trumpCardSuit))
+            {
+                return this.GetHighestCard(trumpCardSuit);
+            }
+
+
             else if (this.CantPlayOtherThanOpponentSuit(opponentCardSuit))
             {
                 card = this.GetLowestCard(opponentCardSuit);
