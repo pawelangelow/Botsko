@@ -55,6 +55,8 @@
                 {
                     return card;
                 }
+
+                card = this.ThrowMinimalCard(context);
             }
 
             return base.Execute(context, basePlayer, playerAnnounce);
@@ -122,6 +124,13 @@
             return card;
         }
 
+        private Card GetLowestCard()
+        {
+            var card = this.cards.OrderBy(x => x.GetValue()).FirstOrDefault();
+
+            return card;
+        }
+
         private Card GetLowestCard(CardSuit firstSuit)
         {
             var card = this.cards
@@ -180,8 +189,8 @@
         private Card TakingHandWithAnyOptimalCardWinsTheRound(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
-            var opponentCard = context.SecondPlayedCard;
-            var opponentCardSuit = context.SecondPlayedCard.Suit;
+            var opponentCard = context.FirstPlayedCard;
+            var opponentCardSuit = opponentCard.Suit;
 
             Card highestCard = null;
 
@@ -211,15 +220,15 @@
         }
 
         /// <summary>
-        /// TODO:
+        /// Checks if it is worth taking the current opponent card and finds the optimal response card to be played.
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>The optimal card that takes the hand or NULL if that is not possible.</returns>
         private Card TakingHandWithOptimalCardDifferentThanTrump(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
-            var opponentCard = context.SecondPlayedCard;
-            var opponentCardSuit = context.SecondPlayedCard.Suit;
+            var opponentCard = context.FirstPlayedCard;
+            var opponentCardSuit = opponentCard.Suit;
             var opponentCardValue = opponentCard.GetValue();
             var hasCardWithCorrespondingSuit = this.HasCardsWithSuit(opponentCardSuit);
 
@@ -249,10 +258,10 @@
         }
 
         /// <summary>
-        /// TODO:
+        /// Checks if it is worth taking the current opponent card and finds the optimal response card to be played.
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
-        /// <returns>The optimal card that takes the hand or NULL if that is not possible.</returns>
+        /// <returns>The optimal card that takes the hand or NULL if such does not exist.</returns>
         private Card TakingHandWithOptimalTrumpCard(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
@@ -262,8 +271,8 @@
                 return null;
             }
 
-            var opponentCard = context.SecondPlayedCard;
-            var opponentCardSuit = context.SecondPlayedCard.Suit;
+            var opponentCard = context.FirstPlayedCard;
+            var opponentCardSuit = opponentCard.Suit;
             var opponentCardValue = opponentCard.GetValue();
 
             if (!this.HasCardGreaterThanOpponent(opponentCard))
@@ -321,14 +330,46 @@
 
                         if (card.GetValue() > 5)
                         {
-                            // TODO: Continue
                             return previousCard;
+                        }
+                        else
+                        {
+                            return card;
                         }
                     }
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Finds the minimal optimal card and throws it as a response to the opponent's one.
+        /// </summary>
+        /// <param name="context">PlayerTurnContext holding the turn data.</param>
+        /// <returns>The optimal weakest card for response.</returns>
+        private Card ThrowMinimalCard(PlayerTurnContext context)
+        {
+            var trumpCardSuit = context.TrumpCard.Suit;
+            var opponentCard = context.FirstPlayedCard;
+            var opponentCardSuit = opponentCard.Suit;
+
+            Card card = null;
+
+            if (this.HasCardsWithSuit(opponentCardSuit))
+            {
+                card = this.GetLowestCard(opponentCardSuit);
+            }
+            else if (this.HasCardsWithSuitDifferentThan(trumpCardSuit))
+            {
+                card = this.GetLowestCardDifferentThan(trumpCardSuit);
+            }
+            else
+            {
+                card = this.GetLowestCard();
+            }
+
+            return card;
         }
 
         /// <summary>
