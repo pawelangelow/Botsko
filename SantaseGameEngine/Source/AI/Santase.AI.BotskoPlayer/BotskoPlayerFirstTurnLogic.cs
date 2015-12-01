@@ -153,6 +153,16 @@
             return biggestTrump;
         }
 
+        public Card FindSmallestNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        {
+            var smallestNotTrumpCard = possibleCardsToPlay
+                .Where(c => c.Suit != trumpSuit)
+                .OrderBy(c => c.GetValue())
+                .FirstOrDefault();
+
+            return smallestNotTrumpCard;
+        }
+
         public bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;
@@ -193,16 +203,6 @@
             }
 
             return cardValue;
-        }
-
-        private Card FindSmallestNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
-        {
-            var smallestNotTrumpCard = possibleCardsToPlay
-                .Where(c => c.Suit != trumpSuit)
-                .OrderBy(c => c.GetValue())
-                .FirstOrDefault();
-
-            return smallestNotTrumpCard;
         }
     }
 }

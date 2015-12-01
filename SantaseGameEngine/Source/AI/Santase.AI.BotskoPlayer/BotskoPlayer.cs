@@ -104,8 +104,10 @@
             var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
 
             var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
-            if (this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
+            if (biggestTrumpInHand != null &&
+                this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
             {
+                // If have only this one ??
                 if (biggestTrumpInHand.GetValue() >= 10)
                 {
                     return biggestTrumpInHand;
@@ -115,19 +117,21 @@
                 {
                     return playerAnnounce;
                 }
-
-                var winningAce = this.FirstTurnLogic.HasWinningNotTrumpAce(possibleCardsToPlay, context.TrumpCard.Suit);
-                if (winningAce != null)
-                {
-                    return winningAce;
-                }
-
-                var winningTen = this.FirstTurnLogic.HasWinningNotTrumpTen(context, possibleCardsToPlay, context.TrumpCard.Suit);
-                if (winningTen != null)
-                {
-                    return winningTen;
-                }
             }
+
+            var winningAce = this.FirstTurnLogic.HasWinningNotTrumpAce(possibleCardsToPlay, context.TrumpCard.Suit);
+            if (winningAce != null)
+            {
+                return winningAce;
+            }
+
+            var winningTen = this.FirstTurnLogic.HasWinningNotTrumpTen(context, possibleCardsToPlay, context.TrumpCard.Suit);
+            if (winningTen != null)
+            {
+                return winningTen;
+            }
+
+            cardToPlay = this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
 
             return cardToPlay;
         }
