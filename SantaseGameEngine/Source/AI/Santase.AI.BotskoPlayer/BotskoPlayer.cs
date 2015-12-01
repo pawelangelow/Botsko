@@ -113,7 +113,8 @@
                     return biggestTrumpInHand;
                 }
 
-                if (playerAnnounce.Suit == context.TrumpCard.Suit)
+                if (playerAnnounce != null &&
+                    playerAnnounce.Suit == context.TrumpCard.Suit)
                 {
                     return playerAnnounce;
                 }
