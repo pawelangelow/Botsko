@@ -132,6 +132,9 @@
                 return winningTen;
             }
 
+            // Find other smaller but winning card
+
+            // If do not find any winning card, play the smallest one
             cardToPlay = this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
 
             return cardToPlay;
