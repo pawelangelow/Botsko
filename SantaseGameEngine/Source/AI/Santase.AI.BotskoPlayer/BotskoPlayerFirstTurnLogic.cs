@@ -17,27 +17,28 @@
         {
         }
 
+        // This method will execute only if the other logic do not find card
+        // it return random card
         public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
-            var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
-            if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
-            {
-                return this.currentWinningCard;
-            }
-
-            Card cardToPlay = null;
-
             return base.Execute(context, basePlayer, playerAnnounce);
         }
 
         public Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
-            // Check if can call 20 or 40 -> and do it
+            // 1. Check if can win the round with the biggest trump
+            if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
+            {
+                return this.currentWinningCard;
+            }
+
+            // 2. Check if can call 20 or 40 -> and do it
             if (context.State.CanAnnounce20Or40 && playerAnnounce != null)
             {
                 return playerAnnounce;
             }
 
+            // 3. Find smallest not trump card and play it
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
             return cardToPlay;
         }
@@ -53,7 +54,13 @@
         ///          if not return false.</returns>
         public bool CanWinWithTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
+            // TODO: Refactor the logic in this method??
             var biggestTrumpCardInHand = this.FindTrumpCardsInHand(possibleCardsToPlay, context.TrumpCard.Suit).FirstOrDefault();
+            if (biggestTrumpCardInHand == null)
+            {
+                return false;
+            }
+
             var biggestTrumpCardInHandValue = biggestTrumpCardInHand.GetValue();
             var pointsWithBiggestTrumpCard
                 = biggestTrumpCardInHandValue + context.SecondPlayerRoundPoints;
@@ -99,14 +106,14 @@
             foreach (var card in possibleWinners)
             {
                 // Check if Ace is used and this 10 is not the last one from this suit
-                if (usedCards[(int)card.Suit, 5] &&
+                if (this.PlayedCards[(int)card.Suit, 5] &&
                     !this.IsCardLastOne((int)card.Suit))
                 {
                     return card;
                 }
 
                 // Check if Ace is used and there no more trumps in the game
-                if (usedCards[(int)card.Suit, 5] &&
+                if (this.PlayedCards[(int)card.Suit, 5] &&
                     this.HowMuchTrumpsAreInPlay(trumpSuit) == this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count())
                 {
                     return card;
@@ -129,7 +136,7 @@
             int count = 0;
             for (int type = 5; type >= 0; type--)
             {
-                if (usedCards[suit, type])
+                if (this.PlayedCards[suit, type])
                 {
                     count++;
                 }
@@ -175,7 +182,7 @@
 
             for (int type = 5; type >= 0; type--)
             {
-                if (usedCards[suit, type] == false)
+                if (this.PlayedCards[suit, type] == false)
                 {
                     int cardValue = this.GetCardValue(type);
                     if (biggestTrumpValue < cardValue)
