@@ -71,8 +71,7 @@
                 }
             }
 
-            return card;
-            //return base.Execute(context, basePlayer, playerAnnounce);
+            return base.Execute(context, basePlayer, playerAnnounce);
         }
 
         /// <summary>
@@ -401,6 +400,12 @@
                     return card;
                 }
             }
+            else if (this.CantPlayOtherThanOpponentSuit(opponentCardSuit))
+            {
+                card = this.GetLowestCard(opponentCardSuit);
+
+                return card;
+            }
 
             // Is worth taking hand
             else if (this.IsWorthTaking(opponentCard) && this.CanTakeHand(opponentCard, trumpCardSuit))
@@ -545,6 +550,11 @@
             {
                 return false;
             }
+        }
+
+        private bool CantPlayOtherThanOpponentSuit(CardSuit opponentCardSuit)
+        {
+            return this.cards.Any(x => x.Suit != opponentCardSuit);
         }
 
         private bool TakingHandWinsTheRound(PlayerTurnContext context, Card opponentCard, out Card myPlayCard)

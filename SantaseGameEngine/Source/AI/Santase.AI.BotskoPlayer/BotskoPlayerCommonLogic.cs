@@ -32,7 +32,6 @@
             }
         }
 
-        // TODO: Remove the dummy logic and make the method abstract, so that the other two cases may override it.
         public virtual Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
@@ -120,6 +119,21 @@
             usedCards[firstCoordinate, secondCoordinate] = true;
         }
 
+        protected int HowMuchTrumpsAreInPlay(CardSuit trumpSuit)
+        {
+            int count = 0;
+
+            for (int j = 0; j < 6; j++)
+            {
+                if (usedCards[(int)trumpSuit, j] == false)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
         //Help methods
 
         private HandSummary GetTrumpsInHand(ICollection<Card> hand, CardSuit trumpSuit)
@@ -180,21 +194,6 @@
             }
 
             return false;
-        }
-
-        protected int HowMuchTrumpsAreInPlay(CardSuit trumpSuit)
-        {
-            int count = 0;
-
-            for (int j = 0; j < 6; j++)
-            {
-                if (usedCards[(int)trumpSuit, j] == false)
-                {
-                    count++;
-                }
-            }
-
-            return count;
         }
     }
 }
