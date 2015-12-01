@@ -17,7 +17,7 @@
         {
         }
 
-        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
@@ -27,36 +27,18 @@
 
             Card cardToPlay = null;
 
-            // TODO: Check if can ChangeTrump()
-
-            return base.Execute(context, basePlayer);
+            return base.Execute(context, basePlayer, playerAnnounce);
         }
 
-        private Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        public Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
-            if (context.State.CanAnnounce20Or40)
+            // Check if can call 20 or 40 -> and do it
+            if (context.State.CanAnnounce20Or40 && playerAnnounce != null)
             {
-
+                return playerAnnounce;
             }
 
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
-            return cardToPlay;
-        }
-
-        private Card PlayWhenIsClosed(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
-        {
-            Card cardToPlay = null;
-            var trumpSuit = context.TrumpCard.Suit;
-            var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
-
-            var biggestTrumpInSecondPlayer = this.FindBiggestTrumpCard(possibleCardsToPlay, trumpSuit);
-            //var biggestTrumpInFirstPlayer = this.FindBiggestTrumpCard(opponentCards, trumpSuit);
-
-            //if(biggestTrumpInSecondPlayer.Type > biggestTrumpInSecondPlayer.Type && trumpsCount > 1)
-            //{
-            //    cardToPlay = biggestTrumpInFirstPlayer;
-            //}
-
             return cardToPlay;
         }
 
@@ -69,9 +51,9 @@
         /// <param name="possibleCardsToPlay">Cards that player can play.</param>
         /// <returns>If the player have winning card return true,
         ///          if not return false.</returns>
-        private bool CanWinWithTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        public bool CanWinWithTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            var biggestTrumpCardInHand = this.FindBiggestTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+            var biggestTrumpCardInHand = this.FindTrumpCardsInHand(possibleCardsToPlay, context.TrumpCard.Suit).FirstOrDefault();
             var biggestTrumpCardInHandValue = biggestTrumpCardInHand.GetValue();
             var pointsWithBiggestTrumpCard
                 = biggestTrumpCardInHandValue + context.SecondPlayerRoundPoints;
@@ -86,29 +68,92 @@
             return false;
         }
 
-        private bool HasWinningNotTrumpAceOrTenInHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card HasWinningNotTrumpAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var possibleWinners = possibleCardsToPlay
-                .Where(c => (c.Type == CardType.Ace ||
-                             c.Type == CardType.Ten) &&
-                            c.Suit != trumpSuit)
-                            .ToList();
+                .Where(c => c.Type == CardType.Ace && c.Suit != trumpSuit)
+                .ToList();
 
+            foreach (var card in possibleWinners)
+            {
+                if (this.HowMuchTrumpsAreInPlay(trumpSuit) == this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count())
+                {
+                    return card;
+                }
+
+                if (!this.IsCardLastOne((int)card.Suit))
+                {
+                    return card;
+                }
+            }
+
+            return null;
+        }
+
+        public Card HasWinningNotTrumpTen(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        {
+            var possibleWinners = possibleCardsToPlay
+                .Where(c => c.Type == CardType.Ten && c.Suit != trumpSuit)
+                .ToList();
+
+            foreach (var card in possibleWinners)
+            {
+                // Check if Ace is used and this 10 is not the last one from this suit
+                if (usedCards[(int)card.Suit, 5] &&
+                    !this.IsCardLastOne((int)card.Suit))
+                {
+                    return card;
+                }
+
+                // Check if Ace is used and there no more trumps in the game
+                if (usedCards[(int)card.Suit, 5] &&
+                    this.HowMuchTrumpsAreInPlay(trumpSuit) == this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count())
+                {
+                    return card;
+                }
+
+                // Add logic when is Closed and there are cards in the deck
+                // this is a risky logic
+                // TODO: Talk about this with Ivan and Pavel !!!
+                //if (context.CardsLeftInDeck != 0)
+                //{
+                //    return card;
+                //}
+            }
+
+            return null;
+        }
+
+        public bool IsCardLastOne(int suit)
+        {
+            int count = 0;
+            for (int type = 5; type >= 0; type--)
+            {
+                if (usedCards[suit, type])
+                {
+                    count++;
+                }
+            }
+
+            if (count == 5)
+            {
+                return true;
+            }
 
             return false;
         }
 
-        private Card FindBiggestTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public List<Card> FindTrumpCardsInHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var biggestTrump = possibleCardsToPlay
                 .Where(c => c.Suit == trumpSuit)
                 .OrderByDescending(c => c.GetValue())
-                .FirstOrDefault();
+                .ToList();
 
             return biggestTrump;
         }
 
-        private Card FindSmallestNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card FindSmallestNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var smallestNotTrumpCard = possibleCardsToPlay
                 .Where(c => c.Suit != trumpSuit)
@@ -118,7 +163,7 @@
             return smallestNotTrumpCard;
         }
 
-        private bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
+        public bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;
             int biggestTrumpValue = biggestTrump.GetValue();
@@ -132,18 +177,7 @@
             {
                 if (usedCards[suit, type] == false)
                 {
-                    int cardValue = 0;
-                    switch (type)
-                    {
-                        case 0: cardValue = 0; break;
-                        case 1: cardValue = 2; break;
-                        case 2: cardValue = 3; break;
-                        case 3: cardValue = 4; break;
-                        case 4: cardValue = 10; break;
-                        case 5: cardValue = 11; break;
-                        default: throw new ArgumentException("Unsupported card to play!");
-                    }
-
+                    int cardValue = this.GetCardValue(type);
                     if (biggestTrumpValue < cardValue)
                     {
                         return false;
@@ -152,6 +186,23 @@
             }
 
             return true;
+        }
+
+        private int GetCardValue(int type)
+        {
+            int cardValue = 0;
+            switch (type)
+            {
+                case 0: cardValue = 0; break;
+                case 1: cardValue = 2; break;
+                case 2: cardValue = 3; break;
+                case 3: cardValue = 4; break;
+                case 4: cardValue = 10; break;
+                case 5: cardValue = 11; break;
+                default: throw new ArgumentException("Unsupported card to play!");
+            }
+
+            return cardValue;
         }
     }
 }

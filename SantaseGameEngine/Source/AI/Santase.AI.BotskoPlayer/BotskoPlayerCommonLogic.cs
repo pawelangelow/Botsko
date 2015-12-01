@@ -33,7 +33,7 @@
         }
 
         // TODO: Remove the dummy logic and make the method abstract, so that the other two cases may override it.
-        public virtual Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
+        public virtual Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.playerActionValidator.GetPossibleCardsToPlay(context, this.cards);
             var shuffledCards = possibleCardsToPlay.Shuffle();
@@ -60,10 +60,10 @@
             {
                 var condition = this.cards
                     .Where(c => c.Suit == context.TrumpCard.Suit &&
-                            c.Type == CardType.Queen || c.Type == CardType.King)
+                            (c.Type == CardType.Queen || c.Type == CardType.King))
                     .Count();
 
-                if (condition > 1)
+                if (condition == 2)
                 {
                     return true; ////4 trumps, maybe 40 as announce and at least one ace has good chance to win the game
                 }
@@ -78,8 +78,6 @@
                     return true; //// At least 3 trumps, 1 ace and points close to win
                 }
             }
-
-            // if(handSummary.CountOfTrumps >= 2 &&)
 
             return false;
         }

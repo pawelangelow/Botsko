@@ -9,13 +9,14 @@
     using Logic.Cards;
     using Logic.PlayerActionValidate;
     using Logic.Players;
-    using Models;
 
     public class BotskoPlayerSecondTurnLogic : BotskoPlayerCommonLogic
     {
         // Extract to constants class or use already defined constants.
         public const int PointsRequiredForWinningRound = 66;
         public const int NoOptimalCardInHand = -1;
+        public const int AceCardValue = 11;
+        public const int TenCardValue = 10;
 
         public BotskoPlayerSecondTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
             : base(playerActionValidator, cards)
@@ -27,18 +28,36 @@
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>Response card.</returns>
-        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer)
+        public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
-            var card = this.GetCardForTakingHandWinsTheRound(context);
-
-            if (card != null)
+            if (context.State.ShouldObserveRules)
             {
-                return card;
+            }
+            else
+            {
+                // Highest priority.
+                var card = this.TakingHandWithAnyOptimalCardWinsTheRound(context);
+                if (card != null)
+                {
+                    return card;
+                }
+
+                // First-Mid priority logic
+                card = this.TakingHandWithOptimalCardDifferentThanTrump(context);
+                if (card != null)
+                {
+                    return card;
+                }
+
+                // Second-Mid priority logic
+                card = this.TakingHandWithOptimalTrumpCard(context);
+                if (card != null)
+                {
+                    return card;
+                }
             }
 
-            // Next priority logic
-
-            return base.Execute(context, basePlayer);
+            return base.Execute(context, basePlayer, playerAnnounce);
         }
 
         /// <summary>
@@ -49,6 +68,7 @@
         private Card GetHighestCardDifferentThanTrump(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
+
             var card = this.cards
                 .Where(x => x.Suit != trumpCardSuit)
                 .OrderByDescending(x => x.GetValue())
@@ -62,7 +82,7 @@
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>The highest card found that matches the conditions.</returns>
-        private Card GetHighestCard(PlayerTurnContext context)
+        private Card GetHighestCard()
         {
             var card = this.cards.OrderByDescending(x => x.GetValue()).FirstOrDefault();
 
@@ -73,12 +93,12 @@
         /// Finds the highest card available in hand with CardSuit equal to the trump card.
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
-        /// <param name="desiredCardSuit">CardSuit of the trump card.</param>
+        /// <param name="firstSuit">CardSuit of the trump card.</param>
         /// <returns>The highest card found that matches the conditions.</returns>
-        private Card GetHighestCard(PlayerTurnContext context, CardSuit desiredCardSuit)
+        private Card GetHighestCard(CardSuit firstSuit)
         {
             var card = this.cards
-                .Where(x => x.Suit == desiredCardSuit)
+                .Where(x => x.Suit == firstSuit)
                 .OrderByDescending(x => x.GetValue())
                 .FirstOrDefault();
 
@@ -89,14 +109,64 @@
         /// Finds the highest card available in hand with CardSuit equal either to the opponent's card or the trump card.
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
-        /// <param name="opponentCardSuit">CardSuit of the opponent's card.</param>
-        /// <param name="trumpCardSuit">CardSuit of the trump card.</param>
+        /// <param name="firstSuit">CardSuit of the opponent's card.</param>
+        /// <param name="secondSuit">CardSuit of the trump card.</param>
         /// <returns>The highest card found that matches the conditions.</returns>
-        private Card GetHighestCard(PlayerTurnContext context, CardSuit opponentCardSuit, CardSuit trumpCardSuit)
+        private Card GetHighestCard(CardSuit firstSuit, CardSuit secondSuit)
         {
             var card = this.cards
-                .Where(x => x.Suit == opponentCardSuit || x.Suit == trumpCardSuit)
+                .Where(x => x.Suit == firstSuit || x.Suit == secondSuit)
                 .OrderByDescending(x => x.GetValue())
+                .FirstOrDefault();
+
+            return card;
+        }
+
+        private Card GetLowestCard(CardSuit firstSuit)
+        {
+            var card = this.cards
+               .Where(x => x.Suit == firstSuit)
+               .OrderBy(x => x.GetValue())
+               .FirstOrDefault();
+
+            return card;
+        }
+
+        private Card GetLowestCard(CardSuit firstSuit, CardSuit secondSuit)
+        {
+            var card = this.cards
+               .Where(x => x.Suit == firstSuit || x.Suit == secondSuit)
+               .OrderBy(x => x.GetValue())
+               .FirstOrDefault();
+
+            return card;
+        }
+
+        private Card GetLowestCard(CardSuit firstSuit, CardSuit secondSuit, CardSuit thirdSuit)
+        {
+            var card = this.cards
+               .Where(x => x.Suit == firstSuit || x.Suit == secondSuit || x.Suit == thirdSuit)
+               .OrderBy(x => x.GetValue())
+               .FirstOrDefault();
+
+            return card;
+        }
+
+        private Card GetLowestCard(CardSuit firstSuit, CardSuit secondSuit, CardSuit thirdSuit, CardSuit fourthSuit)
+        {
+            var card = this.cards
+               .Where(x => x.Suit == firstSuit || x.Suit == secondSuit || x.Suit == thirdSuit || x.Suit == fourthSuit)
+               .OrderBy(x => x.GetValue())
+               .FirstOrDefault();
+
+            return card;
+        }
+
+        private Card GetLowestCardDifferentThan(CardSuit firstSuit)
+        {
+            var card = this.cards
+                .Where(x => x.Suit != firstSuit)
+                .OrderBy(x => x.GetValue())
                 .FirstOrDefault();
 
             return card;
@@ -107,7 +177,7 @@
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>The optimal card that wins the round or NULL if that is not possible.</returns>
-        private Card GetCardForTakingHandWinsTheRound(PlayerTurnContext context)
+        private Card TakingHandWithAnyOptimalCardWinsTheRound(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
             var opponentCard = context.SecondPlayedCard;
@@ -118,11 +188,11 @@
             // Gets the highest response card possible.
             if (opponentCardSuit != trumpCardSuit)
             {
-                highestCard = this.GetHighestCard(context, opponentCardSuit, trumpCardSuit);
+                highestCard = this.GetHighestCard(opponentCardSuit, trumpCardSuit);
             }
             else
             {
-                highestCard = this.GetHighestCard(context, trumpCardSuit);
+                highestCard = this.GetHighestCard(trumpCardSuit);
             }
 
             var highestCardValue = highestCard != null ? highestCard.GetValue() : NoOptimalCardInHand;
@@ -141,57 +211,124 @@
         }
 
         /// <summary>
-        /// Cases:
-        /// 1.Proverqvai dali ako imash ot suit-a na oponenta, kartata koqto imash e po-golqma ot negovata, 
-        /// 1.1 Ako imash po-golqma, no ti razvalq 20, ne q davai, 
-        /// 1.2 Ako ne ti razvalq dvadeset, vzimai,
-        /// 1.3 Ako nqmash karta ot suit-a na oponenta, proveri dali imash kozove => case 2.
-        /// 2. Ako imash kozove, Proverqvai dali protivnikovata karta struva poveche ot 4 tochki, ako e po-malko ne si struva da habish koz
-        /// i vurni nai-malkoto ot druga boq, koeto ne razvalq 20.
-        /// 1.4 TODO: Ako nqma takova i imash samo tuzove i desqtki, vzemi s koz.
-        /// 2.1 Ako kartata na protivnika struva poveche. Proveri dali nqma da si razvalish 40- s koza.
-        /// Gets the optimal card which will win the turn by taking the current hand.
-        /// With priority to choosing card with suit different than the trump's one.
-        /// If such doesn't exist - it gets the lowest of the trumps.
-        /// If the player has no trumps
+        /// TODO:
         /// </summary>
         /// <param name="context">PlayerTurnContext holding the turn data.</param>
         /// <returns>The optimal card that takes the hand or NULL if that is not possible.</returns>
-        private Card GetCardForTakingHandWithHighestOptimalCard(PlayerTurnContext context)
+        private Card TakingHandWithOptimalCardDifferentThanTrump(PlayerTurnContext context)
         {
             var trumpCardSuit = context.TrumpCard.Suit;
             var opponentCard = context.SecondPlayedCard;
             var opponentCardSuit = context.SecondPlayedCard.Suit;
-            var hasCardWithCorrespondingSuit = this.cards.Any(x => x.Suit == opponentCardSuit);
+            var opponentCardValue = opponentCard.GetValue();
+            var hasCardWithCorrespondingSuit = this.HasCardsWithSuit(opponentCardSuit);
 
-            Card highestCard = null;
+            Card card = null;
 
-            // Gets the highest response card possible.
-            // First tries to find the highest card with opponent's suit that can take the current hand.
-            // If such is not found - tries to find the highest card with trump suit that can take the current hand.
             if (hasCardWithCorrespondingSuit && opponentCardSuit != trumpCardSuit)
             {
-                highestCard = this.GetHighestCard(context, opponentCardSuit);
-            }
-            else
-            {
-                highestCard = this.GetHighestCard(context, trumpCardSuit);
+                card = this.GetHighestCard(opponentCardSuit);
+
+                var myCardValue = card != null ? card.GetValue() : NoOptimalCardInHand;
+
+                if (myCardValue > opponentCardValue && this.HandSumGreaterThan20(myCardValue, opponentCardValue))
+                {
+                    return card;
+                }
+                else if (myCardValue > opponentCardValue && !this.CardBreaks20Or40(card))
+                {
+                    return card;
+                }
+                else if (myCardValue > opponentCardValue && this.CardBreaks20Or40(card))
+                {
+                    return null;
+                }
             }
 
-            // Gets the highest card's value.
-            // If no card is returned from any of the above two methods,
-            // Sets the value to -1, corresponding to NoOptimalCardInHand found.
-            var highestCardValue = highestCard != null ? highestCard.GetValue() : NoOptimalCardInHand;
-            var opponentCardValue = opponentCard.GetValue();
+            return null;
+        }
 
-            if (highestCardValue > opponentCardValue)
-            {
-                return highestCard;
-            }
-            else
+        /// <summary>
+        /// TODO:
+        /// </summary>
+        /// <param name="context">PlayerTurnContext holding the turn data.</param>
+        /// <returns>The optimal card that takes the hand or NULL if that is not possible.</returns>
+        private Card TakingHandWithOptimalTrumpCard(PlayerTurnContext context)
+        {
+            var trumpCardSuit = context.TrumpCard.Suit;
+
+            if (!this.HasCardsWithSuit(trumpCardSuit))
             {
                 return null;
             }
+
+            var opponentCard = context.SecondPlayedCard;
+            var opponentCardSuit = context.SecondPlayedCard.Suit;
+            var opponentCardValue = opponentCard.GetValue();
+
+            if (!this.HasCardGreaterThanOpponent(opponentCard))
+            {
+                return null;
+            }
+
+            Card card = null;
+
+            if (opponentCardSuit != trumpCardSuit)
+            {
+                if (!this.IsWorthSpendingTrump(opponentCardValue))
+                {
+                    return null;
+                }
+                else
+                {
+                    card = this.GetLowestCard(trumpCardSuit);
+
+                    if (this.CardBreaks20Or40(card))
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return card;
+                    }
+                }
+            }
+
+            // If opponent card is trump
+            else
+            {
+                Card previousCard = null;
+
+                if (this.IsWorthSpendingTrump(opponentCardValue))
+                {
+                    card = this.GetHighestCard(trumpCardSuit);
+
+                    return card;
+                }
+                else
+                {
+                    card = this.GetLowestCardDifferentThan(trumpCardSuit);
+
+                    if (card != null && card.GetValue() < 10)
+                    {
+                        return card;
+                    }
+
+                    if (card == null || card.GetValue() > 5)
+                    {
+                        previousCard = card;
+                        card = this.GetLowestCard(trumpCardSuit);
+
+                        if (card.GetValue() > 5)
+                        {
+                            // TODO: Continue
+                            return previousCard;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -214,6 +351,69 @@
             {
                 return false;
             }
+        }
+
+        private bool HandSumGreaterThan20(int cardValue, int opponentCardValue)
+        {
+            return (cardValue + opponentCardValue) > 20;
+        }
+
+        private bool HasCardsWithSuit(CardSuit firstSuit)
+        {
+            return this.cards.Any(x => x.Suit == firstSuit);
+        }
+
+        private bool HasCardsWithSuitDifferentThan(CardSuit firstSuit)
+        {
+            return this.cards.Any(x => x.Suit == firstSuit);
+        }
+
+        private bool HasCardsWithSuitDifferentThan(CardSuit firstSuit, CardSuit secondSuit)
+        {
+            return this.cards.Any(x => x.Suit != firstSuit && x.Suit != secondSuit);
+        }
+
+        private bool HasCardsWithSuitDifferentThan(CardSuit firstSuit, CardSuit secondSuit, CardSuit thirdSuit)
+        {
+            return this.cards.Any(x => x.Suit != firstSuit && x.Suit != secondSuit && x.Suit != thirdSuit);
+        }
+
+        /// <summary>
+        /// Checks if the card passed as argument is returned as a response card, will break 20/40.
+        /// </summary>
+        /// <param name="card">The card pending approval to be returned as response.</param>
+        /// <returns>True, if responding with the card will break 20/40. False, otherwise.</returns>
+        private bool CardBreaks20Or40(Card card)
+        {
+            var cardSuit = card.Suit;
+            var cardType = card.Type;
+
+            if (cardType == CardType.Queen)
+            {
+                var deuce = this.cards.Where(x => x.Suit == cardSuit && x.Type == CardType.King).FirstOrDefault();
+
+                return deuce != null ? true : false;
+            }
+            else if (cardType == CardType.King)
+            {
+                var deuce = this.cards.Where(x => x.Suit == cardSuit && x.Type == CardType.Queen).FirstOrDefault();
+
+                return deuce != null ? true : false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool IsWorthSpendingTrump(int opponentCardValue)
+        {
+            return opponentCardValue > 4;
+        }
+
+        private bool HasCardGreaterThanOpponent(Card opponentCard)
+        {
+            return this.cards.Any(x => x.Suit == opponentCard.Suit && x.GetValue() > opponentCard.GetValue());
         }
     }
 }

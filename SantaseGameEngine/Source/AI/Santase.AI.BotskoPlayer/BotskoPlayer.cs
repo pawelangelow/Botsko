@@ -6,10 +6,14 @@
     using Logic.Cards;
     using Logic.Players;
     using Santase.Logic.Extensions;
+    using System.Collections.Generic;
 
     // ReSharper disable once UnusedMember.Global
     public class BotskoPlayer : BasePlayer
     {
+        private Card lastOpponentPlayedCard;
+        private Card myPlayedCard;
+
         public BotskoPlayer()
             : this("Botsko Player")
         {
@@ -31,6 +35,7 @@
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
             Card cardToPlay = null;
+            var announce = this.CallAnnounce(context);
 
             if (context.FirstPlayedCard == null)
             {
@@ -45,22 +50,32 @@
                     this.CloseGame();
                 }
 
-                // For now this will be here, but it's better to be in FirstTurnLogic
-                // beacause if it's here, this check can be done only before Execute()
-                // or after it, but not between the logic behind
-                var announceCard = this.CallAnnounce(context);
-                if (announceCard != null)
+                if (context.State.ShouldObserveRules)
                 {
-                    return this.PlayCard(announceCard);
+                    cardToPlay = this.PlayWhenObserveRules(context, announce);
                 }
 
-                cardToPlay = this.FirstTurnLogic.Execute(context, this);
+                // Remove if-statement and left only the logic in it.
+                if (!context.State.ShouldObserveRules)
+                {
+                    cardToPlay = this.FirstTurnLogic.PlayWhenRulesDoNotApply(
+                        context,
+                        this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards),
+                        announce);
+                }
+
+                // In worst case the logic above do not find card to play
+                if (cardToPlay == null)
+                {
+                    cardToPlay = this.FirstTurnLogic.Execute(context, this, announce);
+                }
             }
             else
             {
-                cardToPlay = this.SecondTurnLogic.Execute(context, this);
+                cardToPlay = this.SecondTurnLogic.Execute(context, this, announce);
             }
 
+            this.myPlayedCard = cardToPlay;
             return this.PlayCard(cardToPlay);
         }
 
@@ -68,7 +83,61 @@
         {
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
+
+            if (context.FirstPlayedCard == this.myPlayedCard)
+            {
+                this.lastOpponentPlayedCard = context.SecondPlayedCard;
+            }
+            else
+            {
+                this.lastOpponentPlayedCard = context.FirstPlayedCard;
+            }
+
             base.EndTurn(context);
+        }
+
+        private Card PlayWhenObserveRules(PlayerTurnContext context, Card playerAnnounce)
+        {
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
+            Card cardToPlay = null;
+            var trumpSuit = context.TrumpCard.Suit;
+            var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
+
+            var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
+            if (biggestTrumpInHand != null &&
+                this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
+            {
+                // If have only this one ??
+                if (biggestTrumpInHand.GetValue() >= 10)
+                {
+                    return biggestTrumpInHand;
+                }
+
+                if (playerAnnounce != null &&
+                    playerAnnounce.Suit == context.TrumpCard.Suit)
+                {
+                    return playerAnnounce;
+                }
+            }
+
+            var winningAce = this.FirstTurnLogic.HasWinningNotTrumpAce(possibleCardsToPlay, context.TrumpCard.Suit);
+            if (winningAce != null)
+            {
+                return winningAce;
+            }
+
+            var winningTen = this.FirstTurnLogic.HasWinningNotTrumpTen(context, possibleCardsToPlay, context.TrumpCard.Suit);
+            if (winningTen != null)
+            {
+                return winningTen;
+            }
+
+            // Find other smaller but winning card
+
+            // If do not find any winning card, play the smallest one
+            cardToPlay = this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+
+            return cardToPlay;
         }
 
         private Card CallAnnounce(PlayerTurnContext context)
