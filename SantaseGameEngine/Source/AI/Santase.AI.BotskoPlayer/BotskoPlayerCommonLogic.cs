@@ -83,7 +83,7 @@
 
         public virtual void RegisterUsedCard(Card theCard)
         {
-            if(theCard == null)
+            if (theCard == null)
             {
                 return;
             }
@@ -124,7 +124,7 @@
             usedCards[firstCoordinate, secondCoordinate] = true;
         }
 
-        protected int HowMuchTrumpsAreInPlay(CardSuit trumpSuit)
+        public int HowMuchTrumpsAreInPlay(CardSuit trumpSuit)
         {
             int count = 0;
 
