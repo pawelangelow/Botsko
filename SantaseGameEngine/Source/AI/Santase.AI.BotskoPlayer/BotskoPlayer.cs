@@ -119,7 +119,7 @@
             var trumpCardsCount = trumpCards.Count();
             if (trumpCardsCount == 0)
             {
-                return this.PlayNotTrumpCard(context, possibleCardsToPlay, playerAnnounce);
+                return this.PlayNotTrumpCard(possibleCardsToPlay, playerAnnounce, trumpSuit);
             }
 
             var biggestTrumpInHand = trumpCards.FirstOrDefault();
