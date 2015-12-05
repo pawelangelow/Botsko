@@ -7,11 +7,12 @@
     using Logic.Players;
     using Santase.Logic.Extensions;
     using System.Collections.Generic;
+    using System;
 
     // ReSharper disable once UnusedMember.Global
     public class BotskoPlayer : BasePlayer
     {
-        private Card lastOpponentPlayedCard;
+        private Card lastOpponentPlayedCard = null;
         private Card myPlayedCard;
 
         public BotskoPlayer()
@@ -84,13 +85,10 @@
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
 
-            if (context.FirstPlayedCard == this.myPlayedCard)
+            if (context.FirstPlayedCard == this.myPlayedCard &&
+                context.State.ShouldObserveRules)
             {
                 this.lastOpponentPlayedCard = context.SecondPlayedCard;
-            }
-            else
-            {
-                this.lastOpponentPlayedCard = context.FirstPlayedCard;
             }
 
             base.EndTurn(context);
@@ -99,49 +97,88 @@
         private Card PlayWhenObserveRules(PlayerTurnContext context, Card playerAnnounce)
         {
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
-
             var trumpSuit = context.TrumpCard.Suit;
-            // var trumpsCount = possibleCardsToPlay.Where(c => c.Suit == trumpSuit).Count();
-            var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
 
-            if (biggestTrumpInHand != null &&
-                this.FirstTurnLogic.IsBiggestTrumpInMyHand(biggestTrumpInHand))
+            // 1. Check if this is the last card.
+            if (possibleCardsToPlay.Count == 1)
             {
-                // If have only this one ??
-                if (biggestTrumpInHand.GetValue() >= 10)
-                {
-                    // TODO: Check trumps count in the hand
+                return possibleCardsToPlay.FirstOrDefault();
+            }
 
-                    // TODO: Check round points
-
-                    return biggestTrumpInHand;
-                }
-
-                if (playerAnnounce != null &&
-                    playerAnnounce.Suit == trumpSuit)
+            // 2. Check if there is 40/20 and points are 26/46 ot more.
+            if (playerAnnounce != null)
+            {
+                if ((playerAnnounce.Suit == trumpSuit && context.SecondPlayerRoundPoints >= 26) ||
+                    (playerAnnounce.Suit != trumpSuit && context.SecondPlayerRoundPoints >= 46))
                 {
                     return playerAnnounce;
                 }
             }
 
-            var winningAce = this.FirstTurnLogic.HasWinningNotTrumpAce(possibleCardsToPlay, context.TrumpCard.Suit);
-            if (winningAce != null)
+            var trumpCards = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit);
+            var trumpCardsCount = trumpCards.Count();
+            if (trumpCardsCount == 0)
             {
-                return winningAce;
+                return this.PlayNotTrumpCard(context, possibleCardsToPlay, playerAnnounce);
             }
 
-            var winningTen = this.FirstTurnLogic.HasWinningNotTrumpTen(context, possibleCardsToPlay, context.TrumpCard.Suit);
-            if (winningTen != null)
+            var biggestTrumpInHand = trumpCards.FirstOrDefault();
+
+            // Check if the biggest trump in hand is winning card
+            if (trumpCardsCount > 1)
             {
-                return winningTen;
+                if (this.FirstTurnLogic.IsBiggestCardInMyHand(biggestTrumpInHand))
+                {
+                    // Check if the biggest trump in hand is a King and have 40
+                    if (playerAnnounce != null &&
+                        playerAnnounce.Suit == trumpSuit &&
+                        biggestTrumpInHand.Type == CardType.King)
+                    {
+                        return playerAnnounce;
+                    }
+
+                    return biggestTrumpInHand;
+                }
+                else if (playerAnnounce != null &&
+                        playerAnnounce.Suit == trumpSuit)
+                {
+                    return playerAnnounce;
+                }
             }
 
-            // TODO: Fix bug - what to play when the left cards are only trumps
+            if (trumpCardsCount != possibleCardsToPlay.Count)
+            {
+                return this.PlayNotTrumpCard(context, possibleCardsToPlay, playerAnnounce);
+            }
 
-            // TODO: Find other smaller but winning card
+            if (trumpCardsCount == possibleCardsToPlay.Count)
+            {
+                return trumpCards.Last();
+            }
 
-            // If do not find any winning card, play the smallest one
-            return this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+            // Never goes here I hope
+            return this.FirstTurnLogic.Execute(context, this, playerAnnounce);
+        }
+
+        private Card PlayNotTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
+        {
+            var trumpSuit = context.TrumpCard.Suit;
+
+            // 1. Check for winning not trump card
+            var winningNotTrumpCard = this.FirstTurnLogic.HasWinningNotTrumpCard(possibleCardsToPlay, trumpSuit);
+            if (winningNotTrumpCard != null)
+            {
+                return winningNotTrumpCard;
+            }
+
+            // 2. Call 20
+            if (playerAnnounce.Suit != trumpSuit)
+            {
+                return playerAnnounce;
+            }
+
+            // 3. Return the smallest card on the hand
+            return this.FirstTurnLogic.FindSmallestNotTrumpCard(possibleCardsToPlay, trumpSuit);
         }
 
         private Card CallAnnounce(PlayerTurnContext context)

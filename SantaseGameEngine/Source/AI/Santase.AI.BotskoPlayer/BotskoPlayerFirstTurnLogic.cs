@@ -40,6 +40,13 @@
 
             // 3. Find smallest not trump card and play it
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+
+            // TODO: Talk with Pavel and Ivan to add Ten ??
+            if (cardToPlay.Type == CardType.Ace)
+            {
+                return this.FindBetterBetweenTrumpAndAce(possibleCardsToPlay, context.TrumpCard.Suit);
+            }
+
             return cardToPlay;
         }
 
@@ -51,13 +58,13 @@
         /// <param name="trumpSuit">Trump card suit</param>
         /// <returns>If the biggest trump card is winneng returns it,
         ///          else return the smallest one.</returns>
-        public Card FindBestBetweenVeryGoodHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card FindBetterBetweenTrumpAndAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var biggestTrumpCards = this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit);
             var biggestTrump = biggestTrumpCards.FirstOrDefault();
 
             // TODO: Check of if necessary to make check if biggestTrump is != null
-            if (biggestTrump != null && this.IsBiggestTrumpInMyHand(biggestTrump))
+            if (biggestTrump != null && this.IsBiggestCardInMyHand(biggestTrump))
             {
                 return biggestTrump;
             }
@@ -86,7 +93,7 @@
             var pointsWithBiggestTrumpCard
                 = biggestTrumpCardInHand.GetValue() + context.SecondPlayerRoundPoints;
 
-            if (this.IsBiggestTrumpInMyHand(biggestTrumpCardInHand) &&
+            if (this.IsBiggestCardInMyHand(biggestTrumpCardInHand) &&
                 pointsWithBiggestTrumpCard >= 66)
             {
                 this.currentWinningCard = biggestTrumpCardInHand;
@@ -96,59 +103,33 @@
             return false;
         }
 
-        public Card HasWinningNotTrumpAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card HasWinningNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var possibleWinners = possibleCardsToPlay
-                .Where(c => c.Type == CardType.Ace && c.Suit != trumpSuit)
+                .OrderByDescending(c => c.GetValue())
                 .ToList();
 
+            var allTrumpCardsInPlay = this.HowMuchTrumpsAreInPlay(trumpSuit);
+            var handTrumpCards = this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count();
             foreach (var card in possibleWinners)
             {
-                if (this.HowMuchTrumpsAreInPlay(trumpSuit) == this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count())
-                {
-                    return card;
-                }
+                var isBiggestCardInPlay = this.IsBiggestCardInMyHand(card);
 
-                if (!this.IsCardLastOne((int)card.Suit))
-                {
-                    return card;
-                }
+                // TODO: Check if is King and have Queen -> 20
 
-                // TODO: Check if all cards from this suit are in my hand
-            }
-
-            return null;
-        }
-
-        public Card HasWinningNotTrumpTen(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
-        {
-            var possibleWinners = possibleCardsToPlay
-                .Where(c => c.Type == CardType.Ten && c.Suit != trumpSuit)
-                .ToList();
-
-            foreach (var card in possibleWinners)
-            {
-                // Check if Ace is used and this 10 is not the last one from this suit
-                if (this.PlayedCards[(int)card.Suit, 5] &&
+                // Check if bigger cards are used and this card is not the last one from this suit
+                if (isBiggestCardInPlay &&
                     !this.IsCardLastOne((int)card.Suit))
                 {
                     return card;
                 }
 
-                // Check if Ace is used and there no more trumps in the game
-                if (this.PlayedCards[(int)card.Suit, 5] &&
-                    this.HowMuchTrumpsAreInPlay(trumpSuit) == this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).Count())
+                // Check if bigger cards are used and there no more trumps in the game
+                if (isBiggestCardInPlay &&
+                    allTrumpCardsInPlay == handTrumpCards)
                 {
                     return card;
                 }
-
-                // Add logic when is Closed and there are cards in the deck
-                // this is a risky logic
-                // TODO: Talk about this with Ivan and Pavel !!!
-                //if (context.CardsLeftInDeck != 0)
-                //{
-                //    return card;
-                //}
             }
 
             return null;
@@ -222,15 +203,7 @@
                 }
             }
 
-            var smallestCard = smallestNotTrumpCards.FirstOrDefault();
-
-            // TODO: Talk with Pavel and Ivan to add Ten ??
-            if (smallestCard.Type == CardType.Ace)
-            {
-                return this.FindBestBetweenVeryGoodHand(possibleCardsToPlay, trumpSuit);
-            }
-
-            return smallestCard;
+            return smallestNotTrumpCards.FirstOrDefault();
         }
 
         /// <summary>
@@ -267,7 +240,7 @@
         /// <param name="biggestTrump">The biggest trump card in the hand.</param>
         /// <returns>Return true if biggestTrump is the biggest one left in the game.
         ///          Return false if there is bigger one.</returns>
-        public bool IsBiggestTrumpInMyHand(Card biggestTrump)
+        public bool IsBiggestCardInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;
             int biggestTrumpValue = biggestTrump.GetValue();
