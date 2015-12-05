@@ -539,12 +539,12 @@
 
         private bool IsWorthSpendingTrump(int opponentCardValue)
         {
-            return opponentCardValue > 4;
+            return opponentCardValue >= 4;
         }
 
         private bool IsWorthTaking(Card opponentCard)
         {
-            return opponentCard.GetValue() > 4;
+            return opponentCard.GetValue() >= 4;
         }
 
         private bool HasCardGreaterThanOpponent(Card opponentCard)
