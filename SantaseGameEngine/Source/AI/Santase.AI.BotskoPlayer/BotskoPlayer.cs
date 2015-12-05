@@ -105,7 +105,7 @@
             var biggestTrumpInHand = this.FirstTurnLogic.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit).FirstOrDefault();
 
             if (biggestTrumpInHand != null &&
-                this.FirstTurnLogic.IsBiggestTrumpIsInMyHand(biggestTrumpInHand))
+                this.FirstTurnLogic.IsBiggestTrumpInMyHand(biggestTrumpInHand))
             {
                 // If have only this one ??
                 if (biggestTrumpInHand.GetValue() >= 10)
@@ -144,7 +144,7 @@
 
         private Card CallAnnounce(PlayerTurnContext context)
         {
-            // First check for 40
+            // 1. Check for 40
             var possibleCards = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
             var trumpSuit = context.TrumpCard.Suit;
             var announceCard = possibleCards
@@ -157,7 +157,7 @@
                 return announceCard;
             }
 
-            // Check for 20
+            // 2. Check for 20
             announceCard = possibleCards
                 .Where(c => c.Type == CardType.Queen &&
                         this.AnnounceValidator.GetPossibleAnnounce(this.Cards, c, context.TrumpCard) == Announce.Twenty)

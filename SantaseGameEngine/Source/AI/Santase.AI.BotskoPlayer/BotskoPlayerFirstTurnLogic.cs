@@ -54,18 +54,17 @@
         ///          if not return false.</returns>
         public bool CanWinWithTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            // TODO: Refactor the logic in this method??
-            var biggestTrumpCardInHand = this.FindTrumpCardsInHand(possibleCardsToPlay, context.TrumpCard.Suit).FirstOrDefault();
+            var biggestTrumpCardInHand = this.FindTrumpCardsInHand(possibleCardsToPlay, context.TrumpCard.Suit)
+                                            .FirstOrDefault();
             if (biggestTrumpCardInHand == null)
             {
                 return false;
             }
 
-            var biggestTrumpCardInHandValue = biggestTrumpCardInHand.GetValue();
             var pointsWithBiggestTrumpCard
-                = biggestTrumpCardInHandValue + context.SecondPlayerRoundPoints;
+                = biggestTrumpCardInHand.GetValue() + context.SecondPlayerRoundPoints;
 
-            if (this.IsBiggestTrumpIsInMyHand(biggestTrumpCardInHand) &&
+            if (this.IsBiggestTrumpInMyHand(biggestTrumpCardInHand) &&
                 pointsWithBiggestTrumpCard >= 66)
             {
                 this.currentWinningCard = biggestTrumpCardInHand;
@@ -73,6 +72,11 @@
             }
 
             return false;
+        }
+
+        public int CountCardInGivenSuit(ICollection<Card> possibleCardsToPlay, CardSuit suit)
+        {
+            return possibleCardsToPlay.Count(c => c.Suit == suit);
         }
 
         public Card HasWinningNotTrumpAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
@@ -92,6 +96,8 @@
                 {
                     return card;
                 }
+
+                // TODO: Check if all cards from this suit are in my hand
             }
 
             return null;
@@ -131,6 +137,12 @@
             return null;
         }
 
+        /// <summary>
+        /// Check if the card is the last one from this suit.
+        /// </summary>
+        /// <param name="suit">Card suit.</param>
+        /// <returns>Return true if the card is the last one
+        ///          else returns false.</returns>
         public bool IsCardLastOne(int suit)
         {
             int count = 0;
@@ -150,27 +162,87 @@
             return false;
         }
 
+        /// <summary>
+        /// Find all trump cards in hand and order them by power.
+        /// </summary>
+        /// <param name="possibleCardsToPlay">Cards that player can play.</param>
+        /// <param name="trumpSuit">Trump card suit.</param>
+        /// <returns>List with trump cards orderes by their power.</returns>
         public List<Card> FindTrumpCardsInHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
-            var biggestTrump = possibleCardsToPlay
+            var trumpsInHand = possibleCardsToPlay
                 .Where(c => c.Suit == trumpSuit)
                 .OrderByDescending(c => c.GetValue())
                 .ToList();
 
-            return biggestTrump;
+            return trumpsInHand;
         }
 
+        /// <summary>
+        /// Search in the cards for the smallest card to play. 
+        /// If the smallest card is Queen or King first check for possible 20.
+        /// </summary>
+        /// <param name="possibleCardsToPlay">Cards that player can play.</param>
+        /// <param name="trumpSuit">Trump card suit.</param>
+        /// <returns>Return the smallest founded card.</returns>
         public Card FindSmallestNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
-            var smallestNotTrumpCard = possibleCardsToPlay
+            var smallestNotTrumpCards = possibleCardsToPlay
                 .Where(c => c.Suit != trumpSuit)
                 .OrderBy(c => c.GetValue())
-                .FirstOrDefault();
+                .ToList();
 
-            return smallestNotTrumpCard;
+            foreach (var card in smallestNotTrumpCards)
+            {
+                if (card.Type != CardType.Queen && card.Type != CardType.King)
+                {
+                    return card;
+                }
+
+                if (!this.CheckForPossible20(card))
+                {
+                    return card;
+                }
+            }
+
+            return smallestNotTrumpCards.FirstOrDefault();
         }
 
-        public bool IsBiggestTrumpIsInMyHand(Card biggestTrump)
+        /// <summary>
+        /// Check if this card is not a part from possible 20.
+        /// </summary>
+        /// <param name="card">Queen or King to be checked.</param>
+        /// <returns>If the other card from 20 is already played returns false
+        ///          else the card is still in the game.</returns>
+        public bool CheckForPossible20(Card card)
+        {
+            if (card.Type == CardType.Queen)
+            {
+                if (this.PlayedCards[(int)card.Suit, 3] == false)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                if (this.PlayedCards[(int)card.Suit, 2] == false)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if the biggest trump in the hand is the biggest not played.
+        /// </summary>
+        /// <param name="biggestTrump">The biggest trump card in the hand.</param>
+        /// <returns>Return true if biggestTrump is the biggest one left in the game.
+        ///          Return false if there is bigger one.</returns>
+        public bool IsBiggestTrumpInMyHand(Card biggestTrump)
         {
             int suit = (int)biggestTrump.Suit;
             int biggestTrumpValue = biggestTrump.GetValue();
@@ -195,6 +267,11 @@
             return true;
         }
 
+        /// <summary>
+        /// Convert column value from PlayedCards array to card value.
+        /// </summary>
+        /// <param name="type">Represents the column in PlayedCards array.</param>
+        /// <returns>The card value.</returns>
         private int GetCardValue(int type)
         {
             int cardValue = 0;
