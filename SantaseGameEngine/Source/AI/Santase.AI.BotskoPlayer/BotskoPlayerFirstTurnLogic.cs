@@ -106,6 +106,7 @@
         public Card HasWinningNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var possibleWinners = possibleCardsToPlay
+                .Where(c => c.Suit != trumpSuit)
                 .OrderByDescending(c => c.GetValue())
                 .ToList();
 

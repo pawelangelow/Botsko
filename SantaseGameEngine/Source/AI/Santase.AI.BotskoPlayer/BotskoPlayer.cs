@@ -148,7 +148,7 @@
 
             if (trumpCardsCount != possibleCardsToPlay.Count)
             {
-                return this.PlayNotTrumpCard(context, possibleCardsToPlay, playerAnnounce);
+                return this.PlayNotTrumpCard(possibleCardsToPlay, playerAnnounce, trumpSuit);
             }
 
             if (trumpCardsCount == possibleCardsToPlay.Count)
@@ -160,10 +160,8 @@
             return this.FirstTurnLogic.Execute(context, this, playerAnnounce);
         }
 
-        private Card PlayNotTrumpCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
+        private Card PlayNotTrumpCard(ICollection<Card> possibleCardsToPlay, Card playerAnnounce, CardSuit trumpSuit)
         {
-            var trumpSuit = context.TrumpCard.Suit;
-
             // 1. Check for winning not trump card
             var winningNotTrumpCard = this.FirstTurnLogic.HasWinningNotTrumpCard(possibleCardsToPlay, trumpSuit);
             if (winningNotTrumpCard != null)
