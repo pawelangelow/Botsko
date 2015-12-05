@@ -136,6 +136,8 @@
                 return winningTen;
             }
 
+            // TODO: Fix bug - what to play when the left cards are only trumps
+
             // TODO: Find other smaller but winning card
 
             // If do not find any winning card, play the smallest one

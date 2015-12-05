@@ -43,7 +43,29 @@
             return cardToPlay;
         }
 
-        // Help methods
+        /// <summary>
+        /// If the smallest not trump card in the hand is Ace
+        /// find the best trump card that can be played.
+        /// </summary>
+        /// <param name="possibleCardsToPlay">Cards that player can play.</param>
+        /// <param name="trumpSuit">Trump card suit</param>
+        /// <returns>If the biggest trump card is winneng returns it,
+        ///          else return the smallest one.</returns>
+        public Card FindBestBetweenVeryGoodHand(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        {
+            var biggestTrumpCards = this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit);
+            var biggestTrump = biggestTrumpCards.FirstOrDefault();
+
+            // TODO: Check of if necessary to make check if biggestTrump is != null
+            if (biggestTrump != null && this.IsBiggestTrumpInMyHand(biggestTrump))
+            {
+                return biggestTrump;
+            }
+            else
+            {
+                return biggestTrumpCards.Last();
+            }
+        }
 
         /// <summary>
         /// Check for 100% winning card in the hand
@@ -72,11 +94,6 @@
             }
 
             return false;
-        }
-
-        public int CountCardInGivenSuit(ICollection<Card> possibleCardsToPlay, CardSuit suit)
-        {
-            return possibleCardsToPlay.Count(c => c.Suit == suit);
         }
 
         public Card HasWinningNotTrumpAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
@@ -205,7 +222,15 @@
                 }
             }
 
-            return smallestNotTrumpCards.FirstOrDefault();
+            var smallestCard = smallestNotTrumpCards.FirstOrDefault();
+
+            // TODO: Talk with Pavel and Ivan to add Ten ??
+            if (smallestCard.Type == CardType.Ace)
+            {
+                return this.FindBestBetweenVeryGoodHand(possibleCardsToPlay, trumpSuit);
+            }
+
+            return smallestCard;
         }
 
         /// <summary>
@@ -265,6 +290,17 @@
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Count how many cards from given suit are left in the game.
+        /// </summary>
+        /// <param name="possibleCardsToPlay">Cards that player can play.</param>
+        /// <param name="suit">Suit to be checked.</param>
+        /// <returns>Integer with cards count.</returns>
+        public int CountCardInGivenSuit(ICollection<Card> possibleCardsToPlay, CardSuit suit)
+        {
+            return possibleCardsToPlay.Count(c => c.Suit == suit);
         }
 
         /// <summary>
