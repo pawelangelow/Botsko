@@ -172,7 +172,8 @@
             }
 
             // 2. Call 20
-            if (playerAnnounce.Suit != trumpSuit)
+            if (playerAnnounce != null &&
+                playerAnnounce.Suit != trumpSuit)
             {
                 return playerAnnounce;
             }
