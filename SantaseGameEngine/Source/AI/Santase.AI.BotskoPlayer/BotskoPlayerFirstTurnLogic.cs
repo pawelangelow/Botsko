@@ -44,7 +44,11 @@
             // TODO: Talk with Pavel and Ivan to add Ten ??
             if (cardToPlay.Type == CardType.Ace)
             {
-                return this.FindBetterBetweenTrumpAndAce(possibleCardsToPlay, context.TrumpCard.Suit);
+                var possibleTrump = this.FindBetterTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
+                if(possibleTrump != null)
+                {
+                    return possibleTrump;
+                }
             }
 
             return cardToPlay;
@@ -58,20 +62,25 @@
         /// <param name="trumpSuit">Trump card suit</param>
         /// <returns>If the biggest trump card is winneng returns it,
         ///          else return the smallest one.</returns>
-        public Card FindBetterBetweenTrumpAndAce(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
+        public Card FindBetterTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var biggestTrumpCards = this.FindTrumpCardsInHand(possibleCardsToPlay, trumpSuit);
             var biggestTrump = biggestTrumpCards.FirstOrDefault();
 
             // TODO: Check of if necessary to make check if biggestTrump is != null
-            if (biggestTrump != null && this.IsBiggestCardInMyHand(biggestTrump))
+            if (biggestTrump != null)
             {
-                return biggestTrump;
+                if (this.IsBiggestCardInMyHand(biggestTrump))
+                {
+                    return biggestTrump;
+                }
+                else
+                {
+                    return biggestTrumpCards.Last();
+                }
             }
-            else
-            {
-                return biggestTrumpCards.Last();
-            }
+
+            return null;
         }
 
         /// <summary>

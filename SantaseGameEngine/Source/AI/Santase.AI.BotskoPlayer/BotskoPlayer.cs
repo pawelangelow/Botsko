@@ -89,7 +89,7 @@
 
         public override void EndRound()
         {
-            this.PlayedCards.Initialize();
+            this.ClearPlayedCards();
             base.EndRound();
         }
 
@@ -206,6 +206,17 @@
             }
 
             return null;
+        }
+
+        private void ClearPlayedCards()
+        {
+            for (int i = 0; i < this.PlayedCards.GetLength(0); i++)
+            {
+                for (int j = 0; j < this.PlayedCards.GetLength(1); j++)
+                {
+                    this.PlayedCards[i, j] = false;
+                }
+            }
         }
     }
 }
