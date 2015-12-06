@@ -18,8 +18,8 @@
         public const int AceCardValue = 11;
         public const int TenCardValue = 10;
 
-        public BotskoPlayerSecondTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
-            : base(playerActionValidator, cards)
+        public BotskoPlayerSecondTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards, bool[,] playedCards)
+            : base(playerActionValidator, cards, playedCards)
         {
         }
 

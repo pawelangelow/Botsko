@@ -12,8 +12,8 @@
     {
         private Card currentWinningCard;
 
-        public BotskoPlayerFirstTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
-            : base(playerActionValidator, cards)
+        public BotskoPlayerFirstTurnLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards, bool[,] playedCards)
+            : base(playerActionValidator, cards, playedCards)
         {
         }
 
@@ -26,16 +26,16 @@
 
         public Card PlayWhenRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay, Card playerAnnounce)
         {
-            // 1. Check if can win the round with the biggest trump
-            if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
-            {
-                return this.currentWinningCard;
-            }
-
-            // 2. Check if can call 20 or 40 -> and do it
+            // 1. Check if can call 20 or 40 -> and do it
             if (context.State.CanAnnounce20Or40 && playerAnnounce != null)
             {
                 return playerAnnounce;
+            }
+
+            // 2. Check if can win the round with the biggest trump
+            if (this.CanWinWithTrumpCard(context, possibleCardsToPlay))
+            {
+                return this.currentWinningCard;
             }
 
             // 3. Find smallest not trump card and play it
@@ -236,17 +236,17 @@
         }
 
         /// <summary>
-        /// Check if the biggest trump in the hand is the biggest not played.
+        /// Check if the biggest card from given suit in the hand is the biggest not played.
         /// </summary>
-        /// <param name="biggestTrump">The biggest trump card in the hand.</param>
-        /// <returns>Return true if biggestTrump is the biggest one left in the game.
+        /// <param name="biggestCard">The biggest card from given suit in the hand.</param>
+        /// <returns>Return true if biggestCard is the biggest one left in the game.
         ///          Return false if there is bigger one.</returns>
-        public bool IsBiggestCardInMyHand(Card biggestTrump)
+        public bool IsBiggestCardInMyHand(Card biggestCard)
         {
-            int suit = (int)biggestTrump.Suit;
-            int biggestTrumpValue = biggestTrump.GetValue();
+            int suit = (int)biggestCard.Suit;
+            int biggestCardValue = biggestCard.GetValue();
 
-            if (biggestTrumpValue == 11)
+            if (biggestCardValue == 11)
             {
                 return true;
             }
@@ -256,7 +256,7 @@
                 if (this.PlayedCards[suit, type] == false)
                 {
                     int cardValue = this.GetCardValue(type);
-                    if (biggestTrumpValue < cardValue)
+                    if (biggestCardValue < cardValue)
                     {
                         return false;
                     }

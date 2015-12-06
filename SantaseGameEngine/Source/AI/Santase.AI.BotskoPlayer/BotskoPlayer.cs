@@ -12,9 +12,6 @@
     // ReSharper disable once UnusedMember.Global
     public class BotskoPlayer : BasePlayer
     {
-        private Card lastOpponentPlayedCard = null;
-        private Card myPlayedCard;
-
         public BotskoPlayer()
             : this("Botsko Player")
         {
@@ -23,8 +20,9 @@
         public BotskoPlayer(string name)
         {
             this.Name = name;
-            this.FirstTurnLogic = new BotskoPlayerFirstTurnLogic(this.PlayerActionValidator, this.Cards);
-            this.SecondTurnLogic = new BotskoPlayerSecondTurnLogic(this.PlayerActionValidator, this.Cards);
+            this.PlayedCards = new bool[4, 6];
+            this.FirstTurnLogic = new BotskoPlayerFirstTurnLogic(this.PlayerActionValidator, this.Cards, this.PlayedCards);
+            this.SecondTurnLogic = new BotskoPlayerSecondTurnLogic(this.PlayerActionValidator, this.Cards, this.PlayedCards);
         }
 
         public override string Name { get; }
@@ -32,6 +30,8 @@
         public BotskoPlayerFirstTurnLogic FirstTurnLogic { get; set; }
 
         public BotskoPlayerSecondTurnLogic SecondTurnLogic { get; set; }
+
+        public bool[,] PlayedCards { get; set; }
 
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
@@ -76,7 +76,6 @@
                 cardToPlay = this.SecondTurnLogic.Execute(context, this, announce);
             }
 
-            this.myPlayedCard = cardToPlay;
             return this.PlayCard(cardToPlay);
         }
 
@@ -85,13 +84,13 @@
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
 
-            if (context.FirstPlayedCard == this.myPlayedCard &&
-                context.State.ShouldObserveRules)
-            {
-                this.lastOpponentPlayedCard = context.SecondPlayedCard;
-            }
-
             base.EndTurn(context);
+        }
+
+        public override void EndRound()
+        {
+            this.PlayedCards.Initialize();
+            base.EndRound();
         }
 
         private Card PlayWhenObserveRules(PlayerTurnContext context, Card playerAnnounce)
@@ -182,7 +181,7 @@
 
         private Card CallAnnounce(PlayerTurnContext context)
         {
-            // 1. Check for 40
+            // 1. Check for 40.
             var possibleCards = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
             var trumpSuit = context.TrumpCard.Suit;
             var announceCard = possibleCards
@@ -195,7 +194,7 @@
                 return announceCard;
             }
 
-            // 2. Check for 20
+            // 2. Check for 20.
             announceCard = possibleCards
                 .Where(c => c.Type == CardType.Queen &&
                         this.AnnounceValidator.GetPossibleAnnounce(this.Cards, c, context.TrumpCard) == Announce.Twenty)

@@ -17,11 +17,13 @@
         protected ICollection<Card> cards;
         protected static bool[,] usedCards;
 
-        public BotskoPlayerCommonLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards)
+        public BotskoPlayerCommonLogic(IPlayerActionValidator playerActionValidator, ICollection<Card> cards, bool[,] playedCards)
         {
             this.playerActionValidator = playerActionValidator;
             this.cards = cards;
-            usedCards = new bool[4, 6];
+            //usedCards = new bool[4, 6];
+
+            usedCards = playedCards;
         }
 
         public bool[,] PlayedCards
