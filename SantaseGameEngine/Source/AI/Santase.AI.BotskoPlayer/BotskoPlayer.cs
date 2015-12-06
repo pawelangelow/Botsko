@@ -33,6 +33,10 @@
 
         public bool[,] PlayedCards { get; set; }
 
+        public static bool BotskoIsFirstPlayer { get; private set; }
+
+        public Card BotskoFirstPlayed { get; private set; }
+
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
             Card cardToPlay = null;
@@ -76,11 +80,26 @@
                 cardToPlay = this.SecondTurnLogic.Execute(context, this, announce);
             }
 
+            if (this.BotskoFirstPlayed == null)
+            {
+                this.BotskoFirstPlayed = cardToPlay;
+            }
+
             return this.PlayCard(cardToPlay);
         }
 
         public override void EndTurn(PlayerTurnContext context)
         {
+            if (this.BotskoFirstPlayed == context.FirstPlayedCard)
+            {
+                BotskoIsFirstPlayer = true;
+            }
+
+            if (this.BotskoFirstPlayed == context.SecondPlayedCard)
+            {
+                BotskoIsFirstPlayer = false;
+            }
+
             this.FirstTurnLogic.RegisterUsedCard(context.FirstPlayedCard);
             this.FirstTurnLogic.RegisterUsedCard(context.SecondPlayedCard);
 
@@ -90,6 +109,7 @@
         public override void EndRound()
         {
             this.ClearPlayedCards();
+            this.BotskoFirstPlayed = null;
             base.EndRound();
         }
 
@@ -107,8 +127,11 @@
             // 2. Check if there is 40/20 and points are 26/46 ot more.
             if (playerAnnounce != null)
             {
-                if ((playerAnnounce.Suit == trumpSuit && context.SecondPlayerRoundPoints >= 26) ||
-                    (playerAnnounce.Suit != trumpSuit && context.SecondPlayerRoundPoints >= 46))
+                int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
+                if ((playerAnnounce.Suit == trumpSuit && botskoPoints >= 26) ||
+                    (playerAnnounce.Suit != trumpSuit && botskoPoints >= 46))
                 {
                     return playerAnnounce;
                 }
@@ -147,8 +170,11 @@
 
             if (trumpCardsCount == 1)
             {
+                int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
                 if (this.FirstTurnLogic.IsBiggestCardInMyHand(biggestTrumpInHand) &&
-                    (context.SecondPlayerRoundPoints + biggestTrumpInHand.GetValue()) >= 66)
+                    (botskoPoints + biggestTrumpInHand.GetValue()) >= 66)
                 {
                     return biggestTrumpInHand;
                 }

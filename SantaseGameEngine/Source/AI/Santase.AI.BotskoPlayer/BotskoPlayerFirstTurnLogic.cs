@@ -136,7 +136,10 @@
                 }
             }
 
-            if (context.SecondPlayerRoundPoints + points >= 66)
+            int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
+            if (botskoPoints + points >= 66)
             {
                 this.currentWinningCard = trumpCards.FirstOrDefault();
                 return true;

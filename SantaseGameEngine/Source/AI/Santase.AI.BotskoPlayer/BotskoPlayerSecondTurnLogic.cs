@@ -30,6 +30,26 @@
         /// <returns>Response card.</returns>
         public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
+            ////// PAVEL EDIT
+            //if (context.State.ShouldObserveRules)
+            //{
+
+            //}
+            //else
+            //{
+            //    //// Pavel logic
+
+            //    //// Check for card which ends the game
+
+            //    var winCard = this.IsThereWinCard(context, context.TrumpCard.Suit);
+            //    if (winCard != null)
+            //    {
+            //        return winCard;
+            //    }
+
+            //}
+
+            ////// END OF PAVEL EDIT
             Card card = null;
 
             if (context.State.ShouldObserveRules)
@@ -79,6 +99,26 @@
 
             return base.Execute(context, basePlayer, playerAnnounce);
         }
+
+        ////// PAVEL
+        //private Card IsThereWinCard(PlayerTurnContext context, CardSuit trumpSuit)
+        //{
+        //    //// Case 1: we have 2 trumps and playing them will end the game
+        //    var trumps = this.cards
+        //        .Where(c => c.Suit == trumpSuit)
+        //        .OrderByDescending(c => c.GetValue())
+        //        .ToArray();
+
+        //    if (trumps.Count() >= 2)
+        //    {
+        //        var trumpsSum = trumps[0].GetValue() + trumps[1].GetValue();
+        //        int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ? 
+        //            context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+        //        //if (trumpsSum > (66 - botskoPoints))
+        //    }
+        //    return null;
+        //}
+        ////// END OF PAVEL
 
         /// <summary>
         /// Gets the highest card available in hand which has CardSuit different than the trump card.
@@ -412,7 +452,7 @@
                 return this.GetHighestCard(opponentCard.Suit);
             }
 
-            else if(!this.HasCardsWithSuit(opponentCard.Suit) && opponentCard.Suit != trumpCardSuit && this.HasCardsWithSuit(trumpCardSuit))
+            else if (!this.HasCardsWithSuit(opponentCard.Suit) && opponentCard.Suit != trumpCardSuit && this.HasCardsWithSuit(trumpCardSuit))
             {
                 return this.GetHighestCard(trumpCardSuit);
             }
@@ -473,7 +513,9 @@
         {
             if (highestCardValue > opponentCardValue)
             {
-                var currentTotalPoints = context.SecondPlayerRoundPoints;
+                var currentTotalPoints =  BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
                 var currentHandPoints = highestCardValue + opponentCardValue;
 
                 return (currentTotalPoints + currentHandPoints) >= PointsRequiredForWinningRound ? true : false;
@@ -590,7 +632,10 @@
                 {
                     var takingScore = card.GetValue() + opponentCard.GetValue();
 
-                    if (takingScore + context.SecondPlayerRoundPoints >= PointsRequiredForWinningRound)
+                    int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
+                    if (takingScore + botskoPoints >= PointsRequiredForWinningRound)
                     {
                         return true;
                     }
@@ -611,7 +656,10 @@
                 {
                     var takingScore = myPlayCard.GetValue() + opponentCard.GetValue();
 
-                    if (takingScore + context.SecondPlayerRoundPoints >= PointsRequiredForWinningRound)
+                    int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
+                    if (takingScore + botskoPoints >= PointsRequiredForWinningRound)
                     {
                         return true;
                     }
