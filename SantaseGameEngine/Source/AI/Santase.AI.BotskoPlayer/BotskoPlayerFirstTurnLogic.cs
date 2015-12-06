@@ -38,6 +38,12 @@
                 return this.currentWinningCard;
             }
 
+            // 3. Check if hava sequence of winning trumps
+            if (this.HasSequenceOfWinningTrumps(context, possibleCardsToPlay))
+            {
+                return this.currentWinningCard;
+            }
+
             // 3. Find smallest not trump card and play it
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
 
@@ -45,7 +51,7 @@
             if (cardToPlay.Type == CardType.Ace)
             {
                 var possibleTrump = this.FindBetterTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
-                if(possibleTrump != null)
+                if (possibleTrump != null)
                 {
                     return possibleTrump;
                 }
@@ -112,6 +118,40 @@
             return false;
         }
 
+        public bool HasSequenceOfWinningTrumps(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        {
+            var trumpCards = this.FindTrumpCardsInHand(possibleCardsToPlay, context.TrumpCard.Suit);
+
+            if (trumpCards.Count == 0 || trumpCards.Count == 1)
+            {
+                return false;
+            }
+
+            var points = 0;
+            foreach (var card in trumpCards)
+            {
+                if (card.Type == CardType.Ace || card.Type == CardType.Ten)
+                {
+                    points += card.GetValue();
+                }
+            }
+
+            if (context.SecondPlayerRoundPoints + points >= 66)
+            {
+                this.currentWinningCard = trumpCards.FirstOrDefault();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Find card which is not from trump suit and it's will win this turn.
+        /// </summary>
+        /// <param name="possibleCardsToPlay">Cards that player can play.</param>
+        /// <param name="trumpSuit">Trump card suit.</param>
+        /// <returns>If there is some card from not trump suit and it will win this turn returns it
+        ///          else return null.</returns>
         public Card HasWinningNotTrumpCard(ICollection<Card> possibleCardsToPlay, CardSuit trumpSuit)
         {
             var possibleWinners = possibleCardsToPlay

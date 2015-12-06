@@ -145,6 +145,15 @@
                 }
             }
 
+            if (trumpCardsCount == 1)
+            {
+                if (this.FirstTurnLogic.IsBiggestCardInMyHand(biggestTrumpInHand) &&
+                    (context.SecondPlayerRoundPoints + biggestTrumpInHand.GetValue()) >= 66)
+                {
+                    return biggestTrumpInHand;
+                }
+            }
+
             if (trumpCardsCount != possibleCardsToPlay.Count)
             {
                 return this.PlayNotTrumpCard(possibleCardsToPlay, playerAnnounce, trumpSuit);
