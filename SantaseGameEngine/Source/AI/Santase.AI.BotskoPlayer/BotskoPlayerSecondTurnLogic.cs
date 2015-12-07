@@ -30,95 +30,299 @@
         /// <returns>Response card.</returns>
         public override Card Execute(PlayerTurnContext context, BasePlayer basePlayer, Card playerAnnounce)
         {
-            ////// PAVEL EDIT
+            //// PAVEL EDIT
+            //// Pavel logic
+
+            var opponentCard = context.FirstPlayedCard;
+
+            //// Check for card which ends the game
+            var winCard = this.IsThereWinCard(context, context.TrumpCard.Suit, opponentCard, playerAnnounce);
+            if (winCard != null)
+            {
+                return winCard;
+            }
+
+            //// Check if opponent plays big value card
+            if (opponentCard.GetValue() >= 10)
+            {
+                var myCardInThisSituation = this.CardToBeatHis(opponentCard, context);
+                if (myCardInThisSituation != null)
+                {
+                    return myCardInThisSituation;
+                }
+            }
+
+            //// If opponent has many points or announcement of 40, get as much as you can
+            var opponentPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                context.SecondPlayerRoundPoints : context.FirstPlayerRoundPoints;
+            var botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+            if ((opponentPoints > 45 && botskoPoints < 30) ||
+                context.FirstPlayerAnnounce == Announce.Forty)
+            {
+                var cardToPlayToSave = this.CardToSave(opponentCard, context);
+                if (cardToPlayToSave != null)
+                {
+                    return cardToPlayToSave;
+                }
+            }
+
+            // Check if we break 20 or 40
+
+
+            // Check for good last card
+            if (context.TrumpCard.GetValue() > 2 && context.CardsLeftInDeck == 2)
+            {
+                var cardToPlay = this.CardToGetTheLastOfDeck(opponentCard, context);
+                if (cardToPlay != null)
+                {
+                    return cardToPlay;
+                }
+            }
+
+            // Default
+            return this.cards
+                .OrderBy(c => c.GetValue())
+                .First();
+
+
+            //// END OF PAVEL EDIT
+
+            ////// IVANS shits
+            //Card card = null;
+
             //if (context.State.ShouldObserveRules)
             //{
+            //    card = this.TakingHandWinsTheRound(context);
 
+            //    if (card != null)
+            //    {
+            //        return card;
+            //    }
+
+            //    card = this.ThrowMinimalCard(context);
+            //    if (card != null)
+            //    {
+            //        return card;
+            //    }
             //}
             //else
             //{
-            //    //// Pavel logic
-
-            //    //// Check for card which ends the game
-
-            //    var winCard = this.IsThereWinCard(context, context.TrumpCard.Suit);
-            //    if (winCard != null)
+            //    // Highest priority.
+            //    card = this.TakingHandWithAnyOptimalCardWinsTheRound(context);
+            //    if (card != null)
             //    {
-            //        return winCard;
+            //        return card;
             //    }
 
+            //    // First-Mid priority logic
+            //    card = this.TakingHandWithOptimalCardDifferentThanTrump(context);
+            //    if (card != null)
+            //    {
+            //        return card;
+            //    }
+
+            //    // Second-Mid priority logic
+            //    card = this.TakingHandWithOptimalTrumpCard(context);
+            //    if (card != null)
+            //    {
+            //        return card;
+            //    }
+
+            //    card = this.ThrowMinimalCard(context);
+            //    if (card != null)
+            //    {
+            //        return card;
+            //    }
             //}
-
-            ////// END OF PAVEL EDIT
-            Card card = null;
-
-            if (context.State.ShouldObserveRules)
-            {
-                card = this.TakingHandWinsTheRound(context);
-
-                if (card != null)
-                {
-                    return card;
-                }
-
-                card = this.ThrowMinimalCard(context);
-                if (card != null)
-                {
-                    return card;
-                }
-            }
-            else
-            {
-                // Highest priority.
-                card = this.TakingHandWithAnyOptimalCardWinsTheRound(context);
-                if (card != null)
-                {
-                    return card;
-                }
-
-                // First-Mid priority logic
-                card = this.TakingHandWithOptimalCardDifferentThanTrump(context);
-                if (card != null)
-                {
-                    return card;
-                }
-
-                // Second-Mid priority logic
-                card = this.TakingHandWithOptimalTrumpCard(context);
-                if (card != null)
-                {
-                    return card;
-                }
-
-                card = this.ThrowMinimalCard(context);
-                if (card != null)
-                {
-                    return card;
-                }
-            }
+            ////END OF THEM
 
             return base.Execute(context, basePlayer, playerAnnounce);
         }
 
-        ////// PAVEL
-        //private Card IsThereWinCard(PlayerTurnContext context, CardSuit trumpSuit)
-        //{
-        //    //// Case 1: we have 2 trumps and playing them will end the game
-        //    var trumps = this.cards
-        //        .Where(c => c.Suit == trumpSuit)
-        //        .OrderByDescending(c => c.GetValue())
-        //        .ToArray();
+        //// PAVEL
+        private Card IsThereWinCard(PlayerTurnContext context, CardSuit trumpSuit, Card opponentCard, Card playerAnnounce)
+        {
+            var trumps = this.cards
+                .Where(c => c.Suit == trumpSuit)
+                .OrderByDescending(c => c.GetValue())
+                .ToArray();
 
-        //    if (trumps.Count() >= 2)
-        //    {
-        //        var trumpsSum = trumps[0].GetValue() + trumps[1].GetValue();
-        //        int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ? 
-        //            context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
-        //        //if (trumpsSum > (66 - botskoPoints))
-        //    }
-        //    return null;
-        //}
-        ////// END OF PAVEL
+            if (trumps.Count() == 0)
+            {
+                return null;
+            }
+
+            int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
+
+            //// Case 1: we have trump and playing it will end the game
+            if (trumps[0].GetValue() + botskoPoints + opponentCard.GetValue() >= 66)
+            {
+                return trumps[0];
+            }
+
+            //// Case 2: we have 2 trumps and playing them will end the game
+            if (trumps.Count() >= 2)
+            {
+                var trumpsSum = trumps[0].GetValue() + trumps[1].GetValue();
+                if (trumpsSum + botskoPoints + opponentCard.GetValue() >= 66)
+                {
+                    return trumps[1];
+                }
+            }
+
+            //// Case 3: we have 40 and something else, playing something else to call 40 on next round
+            if (playerAnnounce != null &&
+                playerAnnounce.Suit == trumps[0].Suit &&
+                trumps.Length >= 3)
+            {
+                return trumps
+                    .Where(c => c.Type != CardType.King && c.Type != CardType.Queen)
+                    .OrderBy(c => c.GetValue())
+                    .First();
+            }
+
+            return null;
+        }
+
+        private Card CardToBeatHis(Card opponentCard, PlayerTurnContext context)
+        {
+            if (opponentCard.Suit == context.TrumpCard.Suit)
+            {
+                return null; // There is no point
+            }
+
+            var myCard = this.cards
+                .Where(c =>
+                c.GetValue() > opponentCard.GetValue() &&
+                c.Suit == opponentCard.Suit)
+                .FirstOrDefault();
+
+            if (myCard != null)
+            {
+                return myCard; // We have ace to beat his 10
+            }
+
+            var trumpCards = this.cards
+                .Where(c => c.Suit == context.TrumpCard.Suit)
+                .OrderBy(c => c.GetValue())
+                .ToList();
+            var trumpCard = trumpCards
+                .FirstOrDefault();
+
+            if (trumpCard != null) // TODO: Optimize it
+            {
+                // In case we have 9 and is good to change
+                if (trumpCard.Type == CardType.Nine &&
+                    this.IsGoodToChange(context) &&
+                    (trumpCards.Last().Type != CardType.Queen && trumpCards.Last().Type != CardType.King))
+                {
+                    return trumpCards.Last();
+                }
+
+                if (this.CheckForPossible20or40(trumpCard))
+                {
+                    return trumpCard; // Booo, get this damage!
+                }
+            }
+
+            return null;
+        }
+
+        private bool IsGoodToChange(PlayerTurnContext context)
+        {
+            if (context.TrumpCard.GetValue() > 2)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check if this card is not a part from possible 20.
+        /// </summary>
+        /// <param name="card">Queen or King to be checked.</param>
+        /// <returns>If the other card from 20 is already played returns false
+        ///          else the card is still in the game.</returns>
+        public bool CheckForPossible20or40(Card card)
+        {
+            if (card.Type == CardType.Queen)
+            {
+                if (this.PlayedCards[(int)card.Suit, 3] == false)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                if (this.PlayedCards[(int)card.Suit, 2] == false)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private Card CardToSave(Card opponentCard, PlayerTurnContext context)
+        {
+            Card cardToPlay = this.cards
+                    .Where(c => c.Suit == opponentCard.Suit && c.GetValue() > opponentCard.GetValue())
+                    .OrderByDescending(c => c.GetValue())
+                    .FirstOrDefault();
+
+            if (opponentCard.Suit == context.TrumpCard.Suit)
+            {
+                return cardToPlay;
+            }
+            else
+            {
+                if (cardToPlay == null)
+                {
+                    cardToPlay = this.cards
+                        .Where(c => c.Suit == context.TrumpCard.Suit)
+                        .OrderByDescending(c => c.GetValue()) //Maybe check for 40
+                        .FirstOrDefault();
+                }
+            }
+
+            return cardToPlay; // Plays he highest card
+        }
+
+        private Card CardToGetTheLastOfDeck(Card opponentCard, PlayerTurnContext context)
+        {
+            Card cardToReturn = null;
+
+            if (opponentCard.GetValue() <= 4)
+            {
+                cardToReturn = this.cards
+                    .OrderBy(c => c.GetValue())
+                    .FirstOrDefault();
+            }
+            else
+            {
+                var countOf40Cards = this.cards
+                    .Where(c => c.Suit == context.TrumpCard.Suit &&
+                    (c.Type == CardType.King || c.Type == CardType.Queen))
+                    .Count();
+
+                if (countOf40Cards == 1 &&
+                    (context.TrumpCard.Type == CardType.King || context.TrumpCard.Type == CardType.Queen))
+                {
+                    cardToReturn = this.cards
+                    .OrderBy(c => c.GetValue())
+                    .FirstOrDefault(); // Maybe get his card in other cases
+                }
+            }
+
+            return cardToReturn;
+        }
+
+        //// END OF PAVEL
 
         /// <summary>
         /// Gets the highest card available in hand which has CardSuit different than the trump card.
@@ -513,7 +717,7 @@
         {
             if (highestCardValue > opponentCardValue)
             {
-                var currentTotalPoints =  BotskoPlayer.BotskoIsFirstPlayer ?
+                var currentTotalPoints = BotskoPlayer.BotskoIsFirstPlayer ?
                     context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
 
                 var currentHandPoints = highestCardValue + opponentCardValue;

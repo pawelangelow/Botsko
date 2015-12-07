@@ -44,7 +44,7 @@
                 return this.currentWinningCard;
             }
 
-            // 3. Find smallest not trump card and play it
+            // 4. Find smallest not trump card and play it
             Card cardToPlay = this.FindSmallestNotTrumpCard(possibleCardsToPlay, context.TrumpCard.Suit);
 
             // TODO: Talk with Pavel and Ivan to add Ten ??
@@ -105,8 +105,10 @@
                 return false;
             }
 
+            int botskoPoints = BotskoPlayer.BotskoIsFirstPlayer ?
+                    context.FirstPlayerRoundPoints : context.SecondPlayerRoundPoints;
             var pointsWithBiggestTrumpCard
-                = biggestTrumpCardInHand.GetValue() + context.SecondPlayerRoundPoints;
+                = biggestTrumpCardInHand.GetValue() + botskoPoints;
 
             if (this.IsBiggestCardInMyHand(biggestTrumpCardInHand) &&
                 pointsWithBiggestTrumpCard >= 66)
@@ -250,7 +252,7 @@
                     return card;
                 }
 
-                if (!this.CheckForPossible20(card))
+                if (!this.CheckForPossible20or40(card))
                 {
                     return card;
                 }
@@ -265,7 +267,7 @@
         /// <param name="card">Queen or King to be checked.</param>
         /// <returns>If the other card from 20 is already played returns false
         ///          else the card is still in the game.</returns>
-        public bool CheckForPossible20(Card card)
+        public bool CheckForPossible20or40(Card card)
         {
             if (card.Type == CardType.Queen)
             {
